@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Swissqrbill
+Bundle-SymbolicName: ch.eugster.swissqrbill;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-ClassPath: ch.eugster.swissqrbill,
+ lib/jackson-annotations-2.12.4.jar,
+ lib/jackson-core-2.12.4.jar,
+ lib/jackson-databind-2.12.4.jar,
+ lib/pdfbox-2.0.24.jar,
+ lib/qrbill-generator-2.5.3.jar,
+ lib/qrcodegen-1.7.0.jar,
+ lib/commons-logging-1.2.jar,
+ lib/fontbox-2.0.24.jar,
+ ch.eugster.swissqrcode
+Bundle-Vendor: Christian Eugster
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Automatic-Module-Name: ch.eugster.swissqrbill
+Export-Package: ch.eugster.swissqrbill
