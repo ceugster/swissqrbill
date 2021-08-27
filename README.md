@@ -18,7 +18,8 @@ swissqrbill is a java library used for creation of swiss qrbills. It is built on
 I built this library as a base to build a filemaker plugin, that facilitates the generation of qrbills. Copy the plugin (it will come out soon) into the extension folder of filemaker to make it available within filemaker as a script step named 'GenerateSwissQRBill. It takes as parameter a JSON object, that must have a given structure (the same applies to the java library):
 
 |key|type|usage|description|
-|path.output|string|mandatory|the full output file path as system path or as URI|
+|---|---|---|---|
+|`path.output`|string|mandatory|the full output file path as system path or as URI|
 |path.invoice|string|optional|an existing invoice pdf file. The qrbill will be appended to this file, if given|  
 |form.graphics_format|string|mandatory|one of PDF, SVG, or PNG|
 |form.output_size|string|default|if path.invoice is given, then QR_BILL_EXTRA_SPACE is used (appends to the invoice) else A4_PORTRAIT_SHEET. Available output sizes are: QR_BILL_ONLY, A4_PORTRAIT_SHEET, QR_CODE_ONLY, and QR_BILL_EXTRA_SPACE|
