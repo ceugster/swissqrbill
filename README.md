@@ -20,20 +20,20 @@ I built this library as a base to build a filemaker plugin, that facilitates the
 |key|type|usage|description|
 |---|---|---|---|
 |`path.output`|string|mandatory|the full output file path as system path or as URI|
-|path.invoice|string|optional|an existing invoice pdf file. The qrbill will be appended to this file, if given|  
-|form.graphics_format|string|mandatory|one of PDF, SVG, or PNG|
-|form.output_size|string|default|if path.invoice is given, then QR_BILL_EXTRA_SPACE is used (appends to the invoice) else A4_PORTRAIT_SHEET. Available output sizes are: QR_BILL_ONLY, A4_PORTRAIT_SHEET, QR_CODE_ONLY, and QR_BILL_EXTRA_SPACE|
-|iban|string|mandatory|the iban used|
-|creditor||mandatory|parent JSON node for creditor's items|
-|creditor.name|string|mandatory|the creditor's name (must not be empty and not longer than 70 letters)|
-|creditor.address|string|mandatory|the creditor's address (must not be empty and not longer than 70 letters)|
-|creditor.city|string|mandatory|the creditor's postal code and town (must not be empty and not longer than 70 letters)|  
-|creditor.country|string|mandatory|the creditor's country as DIN 3166 three letter code|
-|reference|string|mandatory|if iban is qriban, else optional) a 27 letter numeric string|  
-|amount|number|optional||  
-|message|string|optional||
-|debtor||optional|parent JSON node for debtor's items (see below)|
-|debtor.name|string|mandatory|if debtor is present: string) the debtor's name (must not be empty and not longer than 70 letters)|
-|debtor.address|string|mandatory|if debtor is present: string) the debtor's address (must not be empty and not longer than 70 letters)|
-|debtor.city|string|mandatory|if debtor is present: string) the debtor's postal code and town (must not be empty and not longer than 70 letters)|  
-|debtor.country|string|mandatory|if debtor is present: string) the debtor's country as DIN 3166 three letter code|
+|`path.invoice`|string|optional|an existing invoice pdf file. The qrbill will be appended to this file, if given|  
+|`form.graphics_format`|string|mandatory|one of PDF, SVG, or PNG|
+|`form.output_size`|string|default|if path.invoice is given, then QR_BILL_EXTRA_SPACE is used (appends to the invoice) else A4_PORTRAIT_SHEET. Available output sizes are: QR_BILL_ONLY, A4_PORTRAIT_SHEET, QR_CODE_ONLY, and QR_BILL_EXTRA_SPACE|
+|`iban`|string|mandatory|the iban used|
+|`creditor`||mandatory|parent JSON node for creditor's items|
+|`creditor.name`|string|mandatory|the creditor's name (must not be empty and not longer than 70 letters)|
+|`creditor.address`|string|mandatory|the creditor's address (must not be empty and not longer than 70 letters)|
+|`creditor.city`|string|mandatory|the creditor's postal code and town (must not be empty and not longer than 70 letters)|  
+|`creditor.country`|string|mandatory|the creditor's country as DIN 3166 three letter code|
+|`reference`|string|mandatory|if iban is qriban, else optional) a 27 letter numeric string|  
+|`amount`|number|optional||  
+|`message`|string|optional||
+|`debtor`||optional|parent JSON node for debtor's items (see below)|
+|`debtor.name`|string|mandatory|if debtor is present: string) the debtor's name (must not be empty and not longer than 70 letters)|
+|`debtor.address`|string|mandatory|if debtor is present: string) the debtor's address (must not be empty and not longer than 70 letters)|
+|`debtor.city`|string|mandatory|if debtor is present: string) the debtor's postal code and town (must not be empty and not longer than 70 letters)|  
+|`debtor.country`|string|mandatory|if debtor is present: string) the debtor's country as DIN 3166 three letter code|
