@@ -92,10 +92,17 @@ public class SwissQRBillGenerator
 			}
 			catch (Exception e)
 			{
-				ObjectNode msg = mapper.createObjectNode();
-				IllegalArgumentException iae = new IllegalArgumentException("'output' must be a valid URI");
-				msg.put("path.output", "Der Pfad für die generierte Daten muss gültig sein (Systempfad oder URI).");
-				result.add(msg);
+				if (IllegalArgumentException.class.isInstance(e))
+				{
+					output = Paths.get(node.get("path").get("output").asText());
+				}
+				else
+				{
+					ObjectNode msg = mapper.createObjectNode();
+					IllegalArgumentException iae = new IllegalArgumentException("'output' must be a valid URI");
+					msg.put("path.output", "Der Pfad für die generierte Daten muss gültig sein (Systempfad oder URI).");
+					result.add(msg);
+				}
 			} 
 
 			BillFormat format = new BillFormat();

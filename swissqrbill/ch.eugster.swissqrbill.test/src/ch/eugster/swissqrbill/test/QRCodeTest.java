@@ -276,16 +276,7 @@ public class QRCodeTest
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
 		Object result = new SwissQRBillGenerator().generate(node.toString());
-		JsonNode resultNode = mapper.readTree(result.toString());
-		assertEquals(ArrayNode.class, resultNode.getClass());
-		assertEquals(1, resultNode.size());
-		Iterator<Entry<String, JsonNode>> entries = resultNode.fields();
-		while (entries.hasNext())
-		{
-			Entry<String, JsonNode> next = entries.next();
-			assertEquals("Quelldatei", next.getKey());
-			assertEquals("Die Quelldatei 'C:\\Users\\christian\\ada8d1d7-f44b-48b3-968e-53baa6550d3a.pdf' existiert nicht. Sie muss für die Verarbeitung vorhanden sein.", next.getValue());
-		}
+		assertEquals("OK", result.toString());
 	}
 	
 	@Test
@@ -417,7 +408,7 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithFilePath() throws JsonMappingException, JsonProcessingException
 	{
-		String out = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".pdf");
+		String out = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".png");
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
@@ -449,7 +440,7 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithMissingCurrency() throws JsonMappingException, JsonProcessingException
 	{
-		String out = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".pdf");
+		String out = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".png");
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
