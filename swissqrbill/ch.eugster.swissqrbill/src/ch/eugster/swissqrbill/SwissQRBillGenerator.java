@@ -12,7 +12,6 @@ import java.net.URISyntaxException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -31,7 +30,6 @@ import net.codecrete.qrbill.generator.GraphicsFormat;
 import net.codecrete.qrbill.generator.Language;
 import net.codecrete.qrbill.generator.OutputSize;
 import net.codecrete.qrbill.generator.QRBill;
-import net.codecrete.qrbill.generator.ValidationMessage;
 import net.codecrete.qrbill.generator.ValidationResult;
 
 public class SwissQRBillGenerator 
@@ -76,34 +74,27 @@ public class SwissQRBillGenerator
 			Path output = null;
 			try
 			{
-				try
-				{
-					URI uri = new URI(node.get("path").get("output").asText());
-					output = Paths.get(uri);
-				}
-				catch (URISyntaxException e)
-				{
-					output = Paths.get(node.get("path").get("output").asText());
-				}
-				catch (FileSystemNotFoundException e)
-				{
-					output = Paths.get(node.get("path").get("output").asText());
-				}
+				URI uri = new URI(node.get("path").get("output").asText());
+				output = Paths.get(uri);
+			}
+			catch (URISyntaxException e)
+			{
+				output = Paths.get(node.get("path").get("output").asText());
+			}
+			catch (FileSystemNotFoundException e)
+			{
+				output = Paths.get(node.get("path").get("output").asText());
+			}
+			catch (IllegalArgumentException e)
+			{
+				output = Paths.get(node.get("path").get("output").asText());
 			}
 			catch (Exception e)
 			{
-				if (IllegalArgumentException.class.isInstance(e))
-				{
-					output = Paths.get(node.get("path").get("output").asText());
-				}
-				else
-				{
-					ObjectNode msg = mapper.createObjectNode();
-					IllegalArgumentException iae = new IllegalArgumentException("'output' must be a valid URI");
-					msg.put("path.output", "Der Pfad für die generierte Daten muss gültig sein (Systempfad oder URI).");
-					result.add(msg);
-				}
-			} 
+				ObjectNode msg = mapper.createObjectNode();
+				msg.put("path.output", "Der Pfad für die generierte Daten muss gültig sein (Systempfad oder URI).");
+				result.add(msg);
+			}
 
 			BillFormat format = new BillFormat();
 			try
@@ -316,6 +307,10 @@ public class SwissQRBillGenerator
 						invoice = Paths.get(node.get("path").get("invoice").asText());
 					}
 					catch (IllegalArgumentException e)
+					{
+						invoice = Paths.get(node.get("path").get("invoice").asText());
+					}
+					catch (Exception e)
 					{
 						ObjectNode msg = mapper.createObjectNode();
 						msg.put("Quelldatei", "Falls die QRBill an ein bestehendes Dokument angefügt werden soll, so muss dieses Dokument bereits bestehen und einen gültigen Namen haben.");

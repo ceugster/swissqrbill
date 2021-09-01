@@ -276,7 +276,16 @@ public class QRCodeTest
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
 		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result.toString());
+		JsonNode resultNode = mapper.readTree(result.toString());
+		assertEquals(ArrayNode.class, resultNode.getClass());
+		assertEquals(1, resultNode.size());
+		Iterator<Entry<String, JsonNode>> entries = resultNode.fields();
+		while (entries.hasNext())
+		{
+			Entry<String, JsonNode> next = entries.next();
+			assertEquals("Quelldatei", next.getKey());
+			assertEquals("Die Quelldatei '" + nonExistentPath + "' existiert nicht. Sie muss für die Verarbeitung vorhanden sein", next.getValue());
+		}
 	}
 	
 	@Test
