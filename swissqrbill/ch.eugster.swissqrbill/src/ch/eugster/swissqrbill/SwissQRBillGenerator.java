@@ -97,6 +97,7 @@ public class SwissQRBillGenerator
 			}
 
 			BillFormat format = new BillFormat();
+			format.setLanguage(guessLanguage(node.get("form")));
 			try
 			{
 				format.setFontFamily("Arial");
@@ -398,6 +399,7 @@ public class SwissQRBillGenerator
 							{
 								if (os != null)
 								{
+									os.flush();
 									os.close();
 								}
 							}
