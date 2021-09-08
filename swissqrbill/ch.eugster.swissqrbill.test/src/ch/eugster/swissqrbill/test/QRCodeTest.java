@@ -1,6 +1,8 @@
 package ch.eugster.swissqrbill.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.net.URI;
@@ -37,6 +39,30 @@ public class QRCodeTest
 		output = new File(out).toURI().toASCIIString();
 		URI uri = QRCodeTest.class.getResource("/invoice.pdf").toURI();
 		invoice = uri.toASCIIString();
+	}
+	
+	@Test
+	public void showVolumes()
+	{
+		File file = null;
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+		{
+			file = new File("C:/Users/christian/");
+			assertTrue(file.exists());
+			assertTrue(file.isAbsolute());
+			assertTrue(file.isDirectory());
+		}
+		else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+		{
+			file = new File("/Festplatte/Users/christian/");
+			assertFalse(file.exists());
+			assertTrue(file.isAbsolute());
+			assertFalse(file.isDirectory());
+			file = new File("/Volumes" + file.getAbsolutePath());
+			assertTrue(file.exists());
+			assertTrue(file.isAbsolute());
+			assertTrue(file.isDirectory());
+		}
 	}
 	
 	@Test
@@ -420,7 +446,7 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", "/Festplatte");
+		path.put("output", "/Volumes/Festplatte/Users/christian/QRBill.pdf");
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());

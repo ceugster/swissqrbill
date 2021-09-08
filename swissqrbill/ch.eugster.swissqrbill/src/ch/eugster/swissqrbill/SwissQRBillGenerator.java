@@ -1,5 +1,6 @@
 package ch.eugster.swissqrbill;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -71,23 +72,32 @@ public class SwissQRBillGenerator
 
 		if (node != null)
 		{
+			String path = node.get("path").get("output").asText();
+			if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+			{
+				File file = new File(path);
+				if (file.isAbsolute())
+				{
+					path = "/Volumes" + path;
+				}
+			}
 			Path output = null;
 			try
 			{
-				URI uri = new URI(node.get("path").get("output").asText());
+				URI uri = new URI(path);
 				output = Paths.get(uri);
 			}
 			catch (URISyntaxException e)
 			{
-				output = Paths.get(node.get("path").get("output").asText());
+				output = Paths.get(path);
 			}
 			catch (FileSystemNotFoundException e)
 			{
-				output = Paths.get(node.get("path").get("output").asText());
+				output = Paths.get(path);
 			}
 			catch (IllegalArgumentException e)
 			{
-				output = Paths.get(node.get("path").get("output").asText());
+				output = Paths.get(path);
 			}
 			catch (Exception e)
 			{
