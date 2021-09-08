@@ -76,7 +76,7 @@ public class SwissQRBillGenerator
 			if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
 			{
 				File file = new File(path);
-				if (file.isAbsolute())
+				if (file.isAbsolute() && !file.getAbsolutePath().startsWith("/Volumes"))
 				{
 					path = "/Volumes" + path;
 				}
@@ -397,10 +397,7 @@ public class SwissQRBillGenerator
 						{
 							output.toFile().delete();
 						}
-						if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-						{
-							output.toFile().createNewFile();
-						}
+						output.toFile().createNewFile();
 						OutputStream os = null;
 						try
 						{
