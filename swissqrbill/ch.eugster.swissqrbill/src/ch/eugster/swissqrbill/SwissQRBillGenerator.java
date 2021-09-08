@@ -255,6 +255,7 @@ public class SwissQRBillGenerator
 			if (node.get("debtor") != null)
 			{
 				Address debtor = new Address();
+				bill.setDebtor(debtor);
 				try
 				{
 					debtor.setName(node.get("debtor").get("name").asText());
