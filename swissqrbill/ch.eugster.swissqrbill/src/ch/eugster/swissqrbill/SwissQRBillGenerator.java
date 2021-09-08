@@ -72,32 +72,31 @@ public class SwissQRBillGenerator
 
 		if (node != null)
 		{
-			String path = node.get("path").get("output").asText();
+			File file = new File(node.get("path").get("output").asText());
 			if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
 			{
-				File file = new File(path);
 				if (file.isAbsolute() && !file.getAbsolutePath().startsWith("/Volumes"))
 				{
-					path = "/Volumes" + path;
+					file = new File("/Volumes" + file.getAbsolutePath());
 				}
 			}
 			Path output = null;
 			try
 			{
-				URI uri = new URI(path);
+				URI uri = new URI(file.getAbsolutePath());
 				output = Paths.get(uri);
 			}
 			catch (URISyntaxException e)
 			{
-				output = Paths.get(path);
+				output = Paths.get(file.getAbsolutePath());
 			}
 			catch (FileSystemNotFoundException e)
 			{
-				output = Paths.get(path);
+				output = Paths.get(file.getAbsolutePath());
 			}
 			catch (IllegalArgumentException e)
 			{
-				output = Paths.get(path);
+				output = Paths.get(file.getAbsolutePath());
 			}
 			catch (Exception e)
 			{

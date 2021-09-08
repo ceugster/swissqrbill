@@ -448,7 +448,7 @@ public class QRCodeTest
 		ObjectNode path = node.putObject("path");
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			path.put("output", "C:\\Users\\christian\\QRBill.pdf");
+			path.put("output", "/C:\\Users\\christian\\QRBill.pdf");
 		}
 		else
 		{
