@@ -475,7 +475,15 @@ public class QRCodeTest
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
 		Object result = new SwissQRBillGenerator().generate(node.toString());
-		File file = new File("/Volumes" + path.get("output").asText());
+		File file = null;
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+		{
+			file = new File(path.get("output").asText());
+		}
+		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+		{
+			file = new File("/Volumes" + path.get("output").asText());
+		}
 		assertEquals("OK", result);	
 		assertTrue(file.exists());
 		file.delete();
@@ -484,7 +492,15 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithFilePath() throws JsonMappingException, JsonProcessingException
 	{
-		String out = "/Festplatte/Users/christian/Documents/QRBill.pdf";
+		String out = null;
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+		{
+			out = "C:/Users/christian/Documents/QRBill.pdf";
+		}
+		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+		{
+			out = "/Festplatte/Users/christian/Documents/QRBill.pdf";
+		}
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
