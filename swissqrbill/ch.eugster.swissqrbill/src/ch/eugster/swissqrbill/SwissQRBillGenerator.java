@@ -387,30 +387,21 @@ public class SwissQRBillGenerator
 						{
 							output.toFile().delete();
 						}
-						if (output.toFile().createNewFile())
+						OutputStream os = null;
+						try
 						{
-							OutputStream os = null;
-							try
-							{
-								os = new FileOutputStream(output.toFile());
-								os.write(bytes);
-							}
-							finally
-							{
-								if (os != null)
-								{
-									os.flush();
-									os.close();
-								}
-							}
-							return "OK";
+							os = new FileOutputStream(output.toFile());
+							os.write(bytes);
 						}
-						else
+						finally
 						{
-							ObjectNode msg = mapper.createObjectNode();
-							msg.put("Zieldatei", "Die Zieldatei '" + output.toString() + "' kann nicht erstellt werden.");
-							result.add(msg);
+							if (os != null)
+							{
+								os.flush();
+								os.close();
+							}
 						}
+						return "OK";
 					} 
 					catch (FileNotFoundException e) 
 					{
@@ -420,10 +411,11 @@ public class SwissQRBillGenerator
 					} 
 					catch (IOException e) 
 					{
+						e.printStackTrace();
 						ObjectNode msg = mapper.createObjectNode();
 						msg.put("Zieldatei", "Beim Zugriff auf die Zieldatei '" + output.toString() + "' ist ein Fehler aufgetreten.");
 						result.add(msg);
-					}
+					} 
 				}
 			}
 		}

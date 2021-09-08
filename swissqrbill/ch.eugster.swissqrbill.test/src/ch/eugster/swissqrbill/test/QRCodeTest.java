@@ -420,7 +420,7 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
+		path.put("output", "/Festplatte");
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
