@@ -294,6 +294,7 @@ public class SwissQRBillGenerator
 					msg.put("debtor.country", "'debtor.country' muss den zweistelligen Landcode gemäss ISO 3166 des Rechnungsempfängers enthalten.");
 					result.add(msg);
 				}
+				bill.setDebtor(debtor);
 			}
 	
 			// Validate QR bill
