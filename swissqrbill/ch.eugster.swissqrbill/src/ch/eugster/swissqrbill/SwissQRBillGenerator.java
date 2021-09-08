@@ -397,6 +397,10 @@ public class SwissQRBillGenerator
 						{
 							output.toFile().delete();
 						}
+						if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+						{
+							output.toFile().createNewFile();
+						}
 						OutputStream os = null;
 						try
 						{

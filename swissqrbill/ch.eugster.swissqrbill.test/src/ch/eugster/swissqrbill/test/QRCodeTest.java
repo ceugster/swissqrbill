@@ -446,7 +446,14 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", "/Volumes/Festplatte/Users/christian/QRBill.pdf");
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+		{
+			path.put("output", "C:\\Users\\christian\\QRBill.pdf");
+		}
+		else
+		{
+			path.put("output", "/Volumes/Festplatte/Users/christian/QRBill.pdf");
+		}
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -468,7 +475,9 @@ public class QRCodeTest
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
 		Object result = new SwissQRBillGenerator().generate(node.toString());
+		File file = new File(path.get("output").asText());
 		assertEquals("OK", result);	
+		assertTrue(file.exists());
 	}
 	
 	@Test
