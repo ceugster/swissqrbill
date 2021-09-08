@@ -452,7 +452,7 @@ public class QRCodeTest
 		}
 		else
 		{
-			path.put("output", "/Volumes/Festplatte/Users/christian/QRBill.pdf");
+			path.put("output", "/Festplatte/Users/christian/QRBill.pdf");
 		}
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
@@ -475,15 +475,16 @@ public class QRCodeTest
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
 		Object result = new SwissQRBillGenerator().generate(node.toString());
-		File file = new File(path.get("output").asText());
+		File file = new File("/Volumes" + path.get("output").asText());
 		assertEquals("OK", result);	
 		assertTrue(file.exists());
+		file.delete();
 	}
 	
 	@Test
 	public void testQRBillWithFilePath() throws JsonMappingException, JsonProcessingException
 	{
-		String out = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".png");
+		String out = "/Festplatte/Users/christian/Documents/QRBill.pdf";
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");

@@ -397,7 +397,6 @@ public class SwissQRBillGenerator
 						{
 							output.toFile().delete();
 						}
-						output.toFile().createNewFile();
 						OutputStream os = null;
 						try
 						{
