@@ -7,10 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +42,25 @@ public class QRCodeTest
 		output = new File(out).toURI().toASCIIString();
 		URI uri = QRCodeTest.class.getResource("/invoice.pdf").toURI();
 		invoice = uri.toASCIIString();
+	}
+
+	@AfterEach
+	public void afterEach()
+	{
+		Path path = null;
+		try
+		{
+			URI uri = new URI(output);
+			path = Paths.get(uri);
+		}
+		catch (Exception e)
+		{
+			path = Paths.get(output);
+		}
+		if (path != null && path.toFile().exists())
+		{
+			path.toFile().delete();
+		}
 	}
 	
 	@Test
@@ -71,8 +93,8 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
-		path.put("invoice", invoice);
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());

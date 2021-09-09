@@ -78,20 +78,8 @@ public class SwissQRBillGenerator
 			{
 				try
 				{
-					if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
-					{
-						File file = new File(path);
-						if (file.isAbsolute() && !file.getAbsolutePath().startsWith("/Volumes"))
-						{
-							output = Paths.get("/Volumes", path);
-						}
-					}
 					URI uri = new URI(path);
 					output = Paths.get(uri);
-					if (!output.toFile().getParentFile().mkdirs())
-					{
-						throw new Exception();
-					}
 				}
 				catch (URISyntaxException e)
 				{
@@ -104,7 +92,15 @@ public class SwissQRBillGenerator
 				catch (IllegalArgumentException e)
 				{
 					output = Paths.get(path);
+					if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+					{
+						if (output.isAbsolute())
+						{
+							output = Paths.get("/Volumes", path);
+						}
+					}
 				}
+				output.toFile().getParentFile().mkdirs();
 			}
 			catch (Exception e)
 			{
