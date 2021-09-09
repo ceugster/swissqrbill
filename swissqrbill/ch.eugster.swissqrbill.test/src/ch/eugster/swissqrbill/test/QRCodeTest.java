@@ -125,8 +125,8 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
-		path.put("invoice", invoice);
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -156,7 +156,7 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
+		path.put("output", this.output);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -185,8 +185,8 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
-		path.put("invoice", invoice);
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -235,8 +235,8 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
-		path.put("invoice", invoice);
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -262,8 +262,8 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
-		path.put("invoice", invoice);
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -301,7 +301,7 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
+		path.put("output", this.output);
 		path.put("invoice", nonExistentPath);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
@@ -342,8 +342,8 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
-		path.put("invoice", invoice);
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PNG.name());
@@ -374,7 +374,7 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
+		path.put("output", this.output);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PNG.name());
@@ -405,8 +405,8 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
-		path.put("invoice", invoice);
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -436,8 +436,8 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", output);
-		path.put("invoice", invoice);
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -470,11 +470,13 @@ public class QRCodeTest
 		ObjectNode path = node.putObject("path");
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			path.put("output", "C:\\Users\\christian\\QRBill.pdf");
+			this.output = "C:\\Users\\christian\\QRBill.pdf";
+			path.put("output", this.output);
 		}
 		else
 		{
-			path.put("output", "/Festplatte/Users/christian/QRBill.pdf");
+			this.output = "/Festplatte/Users/christian/QRBill.pdf";
+			path.put("output", this.output);
 		}
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
@@ -507,23 +509,23 @@ public class QRCodeTest
 			file = new File("/Volumes" + path.get("output").asText());
 		}
 		assertEquals("OK", result);	
-		assertTrue(file.exists());
-		file.delete();
 	}
 	
 	@Test
-	public void testQRBillWithInvalidPath() throws JsonMappingException, JsonProcessingException
+	public void testQRBillWithFileMakerPath() throws JsonMappingException, JsonProcessingException
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			path.put("output", "/C:/Users/christian/QRBill.pdf");
+			this.output = "/C:/Users/christian/QRBill.pdf";
+			path.put("output", this.output);
 		}
 		else
 		{
-			path.put("output", "/Test/Users/christian/QRBill.pdf");
+			this.output = "/Festplatte/Users/christian/QRBill.pdf";
+			path.put("output", this.output);
 		}
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
@@ -546,34 +548,33 @@ public class QRCodeTest
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
 		Object result = new SwissQRBillGenerator().generate(node.toString());
-		JsonNode resultNode = mapper.readTree(result.toString());
-		assertEquals(ArrayNode.class, resultNode.getClass());
-		assertEquals(1, resultNode.size());
-		Iterator<Entry<String, JsonNode>> entries = resultNode.fields();
-		while (entries.hasNext())
+		assertEquals("OK", result);	
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			Entry<String, JsonNode> next = entries.next();
-			assertEquals("path.output", next.getKey());
-			assertEquals("Der Pfad für die generierte Daten muss gültig sein (Systempfad oder URI).", next.getValue());
+			this.output = "C:/Users/christian/QRBill.pdf";
+		}
+		else
+		{
+			this.output = "/Volumes/Festplatte/Users/christian/QRBill.pdf";
+			path.put("output", this.output);
 		}
 	}
 	
 	@Test
 	public void testQRBillWithFilePath() throws JsonMappingException, JsonProcessingException
 	{
-		String out = null;
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			out = "C:/Users/christian/Documents/QRBill.pdf";
+			this.output = "C:/Users/christian/Documents/QRBill.pdf";
 		}
 		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
 		{
-			out = "/Festplatte/Users/christian/Documents/QRBill.pdf";
+			this.output = "/Festplatte/Users/christian/Documents/QRBill.pdf";
 		}
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", out);
+		path.put("output", this.output);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PNG.name());
@@ -601,11 +602,11 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithMissingCurrency() throws JsonMappingException, JsonProcessingException
 	{
-		String out = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".png");
+		this.output = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".png");
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		path.put("output", out);
+		path.put("output", this.output);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PNG.name());

@@ -91,9 +91,16 @@ public class SwissQRBillGenerator
 				}
 				catch (IllegalArgumentException e)
 				{
-					output = Paths.get(path);
-					if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+					if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 					{
+						if (new File(path).isAbsolute() && path.startsWith("/"))
+						{
+							output = Paths.get(path.substring(1));
+						}
+					}
+					else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+					{
+						output = Paths.get(path);
 						if (output.isAbsolute())
 						{
 							output = Paths.get("/Volumes", path);
