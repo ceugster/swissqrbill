@@ -72,31 +72,39 @@ public class SwissQRBillGenerator
 
 		if (node != null)
 		{
-			File file = new File(node.get("path").get("output").asText());
-			if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
-			{
-				if (file.isAbsolute() && !file.getAbsolutePath().startsWith("/Volumes"))
-				{
-					file = new File("/Volumes" + file.getAbsolutePath());
-				}
-			}
+			String path = node.get("path").get("output").asText();
 			Path output = null;
 			try
 			{
-				URI uri = new URI(file.getAbsolutePath());
-				output = Paths.get(uri);
-			}
-			catch (URISyntaxException e)
-			{
-				output = Paths.get(file.getAbsolutePath());
-			}
-			catch (FileSystemNotFoundException e)
-			{
-				output = Paths.get(file.getAbsolutePath());
-			}
-			catch (IllegalArgumentException e)
-			{
-				output = Paths.get(file.getAbsolutePath());
+				try
+				{
+					if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+					{
+						File file = new File(path);
+						if (file.isAbsolute() && !file.getAbsolutePath().startsWith("/Volumes"))
+						{
+							output = Paths.get("/Volumes", path);
+						}
+					}
+					URI uri = new URI(path);
+					output = Paths.get(uri);
+					if (!output.toFile().getParentFile().mkdirs())
+					{
+						throw new Exception();
+					}
+				}
+				catch (URISyntaxException e)
+				{
+					output = Paths.get(path);
+				}
+				catch (FileSystemNotFoundException e)
+				{
+					output = Paths.get(path);
+				}
+				catch (IllegalArgumentException e)
+				{
+					output = Paths.get(path);
+				}
 			}
 			catch (Exception e)
 			{

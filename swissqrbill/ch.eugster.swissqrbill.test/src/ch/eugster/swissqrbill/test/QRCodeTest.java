@@ -448,7 +448,7 @@ public class QRCodeTest
 		ObjectNode path = node.putObject("path");
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			path.put("output", "/C:\\Users\\christian\\QRBill.pdf");
+			path.put("output", "C:\\Users\\christian\\QRBill.pdf");
 		}
 		else
 		{
@@ -487,6 +487,53 @@ public class QRCodeTest
 		assertEquals("OK", result);	
 		assertTrue(file.exists());
 		file.delete();
+	}
+	
+	@Test
+	public void testQRBillWithInvalidPath() throws JsonMappingException, JsonProcessingException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		ObjectNode path = node.putObject("path");
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+		{
+			path.put("output", "/C:/Users/christian/QRBill.pdf");
+		}
+		else
+		{
+			path.put("output", "/Test/Users/christian/QRBill.pdf");
+		}
+		ObjectNode form = node.putObject("form");
+		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
+		form.put("graphics_format", GraphicsFormat.PDF.name());
+		form.put("language", Language.DE.name());
+		node.put("iban", "CH4431999123000889012");
+		node.put("amount", 199.95);
+		node.put("currency", "CHF");
+		node.put("invoice", 10456);
+		ObjectNode creditor = node.putObject("creditor");
+		creditor.put("name", "Robert Schneider AG");
+		creditor.put("address", "Rue du Lac 1268/2/22");
+		creditor.put("city", "2501 Biel");
+		creditor.put("country", "CH");
+		node.put("message", "Abonnement für 2020");
+		ObjectNode debtor = node.putObject("debtor");
+		debtor.put("number", 9048);
+		debtor.put("name", "Pia-Maria Rutschmann-Schnyder");
+		debtor.put("address", "Grosse Marktgasse 28");
+		debtor.put("city", "9400 Rorschach");
+		debtor.put("country", "CH");
+		Object result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode resultNode = mapper.readTree(result.toString());
+		assertEquals(ArrayNode.class, resultNode.getClass());
+		assertEquals(1, resultNode.size());
+		Iterator<Entry<String, JsonNode>> entries = resultNode.fields();
+		while (entries.hasNext())
+		{
+			Entry<String, JsonNode> next = entries.next();
+			assertEquals("path.output", next.getKey());
+			assertEquals("Der Pfad für die generierte Daten muss gültig sein (Systempfad oder URI).", next.getValue());
+		}
 	}
 	
 	@Test
