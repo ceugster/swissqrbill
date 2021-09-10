@@ -59,6 +59,14 @@ public class QRCodeTest
 		}
 		catch (Exception e)
 		{
+			if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+			{
+				File file = new File(this.output);
+				if (file.isAbsolute() && this.output.startsWith("/"))
+				{
+					this.output = this.output.substring(1);
+				}
+			}
 			path = Paths.get(this.output);
 		}
 		if (path != null && path.toFile().exists())
