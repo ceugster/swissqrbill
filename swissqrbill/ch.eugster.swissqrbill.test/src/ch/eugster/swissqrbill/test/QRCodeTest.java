@@ -35,7 +35,7 @@ public class QRCodeTest
 {
 	private String output;
 
-	private File invoice;
+	private String invoice;
 
 	@BeforeEach
 	public void beforeEach() throws URISyntaxException, IOException
@@ -44,8 +44,8 @@ public class QRCodeTest
 		output = new File(out).toURI().toASCIIString();
 		URI uri = QRCodeTest.class.getResource("/invoice.pdf").toURI();
 		File source = Paths.get(uri).toFile();
-		invoice = new File(System.getProperty("user.home") + File.separator + "Documents/invoice.pdf");
-		FileUtils.copyFile(source, invoice);
+		invoice = System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
+		FileUtils.copyFile(source, new File(invoice));
 	}
 
 	@AfterEach
@@ -73,9 +73,10 @@ public class QRCodeTest
 		{
 			path.toFile().delete();
 		}
-		if (this.invoice.exists())
+		File file = new File(this.invoice);
+		if (file.exists())
 		{
-			this.invoice.delete();
+			file.delete();
 		}
 	}
 	
@@ -110,7 +111,7 @@ public class QRCodeTest
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		path.put("invoice", this.invoice.getAbsolutePath());
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -142,7 +143,7 @@ public class QRCodeTest
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		path.put("invoice", this.invoice.getAbsolutePath());
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -202,7 +203,7 @@ public class QRCodeTest
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		path.put("invoice", this.invoice.getAbsolutePath());
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -252,7 +253,7 @@ public class QRCodeTest
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		path.put("invoice", this.invoice.getAbsolutePath());
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -279,7 +280,7 @@ public class QRCodeTest
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		path.put("invoice", this.invoice.getAbsolutePath());
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -359,7 +360,7 @@ public class QRCodeTest
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		path.put("invoice", this.invoice.getAbsolutePath());
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PNG.name());
@@ -422,7 +423,7 @@ public class QRCodeTest
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		path.put("invoice", this.invoice.getAbsolutePath());
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -453,7 +454,7 @@ public class QRCodeTest
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		path.put("invoice", this.invoice.getAbsolutePath());
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -585,13 +586,13 @@ public class QRCodeTest
 		}
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			this.invoice = new File("/C:/Users/christian/Documents/invoice.pdf");
-			path.put("invoice", this.invoice.getAbsolutePath());
+			this.invoice = "/C:/Users/christian/Documents/invoice.pdf";
+			path.put("invoice", this.invoice);
 		}
 		else
 		{
-			this.invoice = new File("/Festplatte/Users/christian/Documents/invoice.pdf");
-			path.put("invoice", this.invoice.getAbsolutePath());
+			this.invoice = "/Festplatte/Users/christian/Documents/invoice.pdf";
+			path.put("invoice", this.invoice);
 		}
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
