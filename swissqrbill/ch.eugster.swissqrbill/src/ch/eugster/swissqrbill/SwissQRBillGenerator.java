@@ -76,38 +76,7 @@ public class SwissQRBillGenerator
 			Path output = null;
 			try
 			{
-				try
-				{
-					URI uri = new URI(path);
-					output = Paths.get(uri);
-				}
-				catch (URISyntaxException e)
-				{
-					output = Paths.get(path);
-				}
-				catch (FileSystemNotFoundException e)
-				{
-					output = Paths.get(path);
-				}
-				catch (IllegalArgumentException e)
-				{
-					if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-					{
-						if (new File(path).isAbsolute() && path.startsWith("/"))
-						{
-							output = Paths.get(path.substring(1));
-						}
-					}
-					else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
-					{
-						output = Paths.get(path);
-						if (output.isAbsolute())
-						{
-							output = Paths.get("/Volumes", path);
-						}
-					}
-				}
-				output.toFile().getParentFile().mkdirs();
+				output = adaptFilePathname(path, mapper, result);
 			}
 			catch (Exception e)
 			{
@@ -313,24 +282,12 @@ public class SwissQRBillGenerator
 			if (validation.isValid() && result.isEmpty())
 			{
 				Path invoice = null;
-				if (node.get("path").get("invoice") != null && node.get("path").get("invoice").asText() != null)
+				if (node.get("path") != null && node.get("path").get("invoice") != null)
 				{
+					path = node.get("path").get("invoice").asText();
 					try
 					{
-						URI uri = new URI(node.get("path").get("invoice").asText());
-						invoice = Paths.get(uri);
-					}
-					catch (URISyntaxException e)
-					{
-						invoice = Paths.get(node.get("path").get("invoice").asText());
-					}
-					catch (FileSystemNotFoundException e)
-					{
-						invoice = Paths.get(node.get("path").get("invoice").asText());
-					}
-					catch (IllegalArgumentException e)
-					{
-						invoice = Paths.get(node.get("path").get("invoice").asText());
+						invoice = adaptFilePathname(path, mapper, result);
 					}
 					catch (Exception e)
 					{
@@ -548,4 +505,41 @@ public class SwissQRBillGenerator
 		return "'graphics_format' muss eines der folgenden Werte sein: " + values;
 	}
 	
+	private Path adaptFilePathname(String path, ObjectMapper mapper, ArrayNode result) throws Exception
+	{
+		Path correctedPath = null;
+		try
+		{
+			URI uri = new URI(path);
+			correctedPath = Paths.get(uri);
+		}
+		catch (URISyntaxException e)
+		{
+			correctedPath = Paths.get(path);
+		}
+		catch (FileSystemNotFoundException e)
+		{
+			correctedPath = Paths.get(path);
+		}
+		catch (IllegalArgumentException e)
+		{
+			if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+			{
+				if (new File(path).isAbsolute() && path.startsWith("/"))
+				{
+					correctedPath = Paths.get(path.substring(1));
+				}
+			}
+			else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+			{
+				correctedPath = Paths.get(path);
+				if (correctedPath.isAbsolute() && !correctedPath.toFile().getAbsolutePath().startsWith("/Users") && !correctedPath.toFile().getAbsolutePath().startsWith("/Library"))
+				{
+					correctedPath = Paths.get("/Volumes", path);
+				}
+			}
+		}
+		correctedPath.toFile().getParentFile().mkdirs();
+		return correctedPath;
+	}
 }
