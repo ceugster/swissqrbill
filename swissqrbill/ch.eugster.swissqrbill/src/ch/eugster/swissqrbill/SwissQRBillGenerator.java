@@ -542,4 +542,95 @@ public class SwissQRBillGenerator
 		correctedPath.toFile().getParentFile().mkdirs();
 		return correctedPath;
 	}
+	
+//	private enum Parameter
+//	{
+//		AMOUNT("amount", false),
+//		CURRENCY("currency", true),
+//		IBAN("iban", true),
+//		REFERENCE("reference", true),
+//		PATH("path", true),
+//		FORM("form", false),
+//		CREDITOR("creditor", true),
+//		DEBTOR("debtor", false);
+//		
+//		private String key;
+//		
+//		private boolean mandatory;
+//		
+//		private Parameter(String key, boolean mandatory)
+//		{
+//			this.key = key;
+//			this.mandatory = mandatory;
+//		}
+//	}
+//	
+//	private enum Creditor
+//	{
+//		NAME("name", true), 
+//		ADDRESS("address", true), 
+//		CITY("city", true), 
+//		COUNTRY("country", true);
+//		
+//		private String key;
+//		
+//		private boolean mandatory;
+//		
+//		private Creditor(String key, boolean mandatory)
+//		{
+//			this.key = key;
+//			this.mandatory = mandatory;
+//		}
+//	}
+//
+//	private enum Debtor
+//	{
+//		NAME("name", true), 
+//		ADDRESS("address", true), 
+//		CITY("city", true), 
+//		COUNTRY("country", true);
+//		
+//		private String key;
+//		
+//		private boolean mandatory;
+//		
+//		private Debtor(String key, boolean mandatory)
+//		{
+//			this.key = key;
+//			this.mandatory = mandatory;
+//		}
+//	}
+//	
+//	private enum Form
+//	{
+//		GRAPHICS_FORMAT("form.graphics_format", false),
+//		OUTPUT_SIZE("form.output_size", false),
+//		LANGUAGE("form.language", false);
+//		
+//		private String key;
+//		
+//		private boolean mandatory;
+//		
+//		private Form(String key, boolean mandatory)
+//		{
+//			this.key = key;
+//			this.mandatory = mandatory;
+//		}
+//	}
+//
+//	private enum Path
+//	{
+//		OUTPUT("path.output", true), 
+//		INVOICE("path.invoice", false);
+//		
+//		private String key;
+//		
+//		private boolean mandatory;
+//		
+//		private Path(String key, boolean mandatory)
+//		{
+//			this.key = key;
+//			this.mandatory = mandatory;
+//		}
+//	}
 }
