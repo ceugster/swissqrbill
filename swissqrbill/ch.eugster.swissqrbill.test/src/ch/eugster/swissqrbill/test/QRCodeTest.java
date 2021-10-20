@@ -83,24 +83,28 @@ public class QRCodeTest
 	@Test
 	public void showVolumes()
 	{
-		File file = null;
+		Path path = null;
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			file = new File("C:/Users/christian/");
-			assertTrue(file.exists());
-			assertTrue(file.isAbsolute());
-			assertTrue(file.isDirectory());
+			path = Paths.get("C:/Users/christian/");
+			assertTrue(path.toFile().exists());
+			assertTrue(path.isAbsolute());
+			assertTrue(path.toFile().isDirectory());
 		}
 		else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
 		{
-			file = new File("/Festplatte/Users/christian/");
-			assertFalse(file.exists());
-			assertTrue(file.isAbsolute());
-			assertFalse(file.isDirectory());
-			file = new File("/Volumes" + file.getAbsolutePath());
-			assertTrue(file.exists());
-			assertTrue(file.isAbsolute());
-			assertTrue(file.isDirectory());
+			path = Paths.get("/Festplatte", "Users", "christian");
+			assertFalse(path.toFile().exists());
+			assertTrue(path.isAbsolute());
+			assertFalse(path.toFile().isDirectory());
+			if (path.getName(0).equals(Paths.get("Festplatte")))
+			{
+				path = Paths.get("/", path.subpath(1, path.getNameCount()).toString());
+				System.out.println(path.toString());
+			}
+			assertTrue(path.toFile().exists());
+			assertTrue(path.isAbsolute());
+			assertTrue(path.toFile().isDirectory());
 		}
 	}
 	

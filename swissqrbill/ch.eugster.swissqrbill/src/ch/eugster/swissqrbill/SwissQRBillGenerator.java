@@ -535,7 +535,7 @@ public class SwissQRBillGenerator
 				correctedPath = Paths.get(path);
 				if (correctedPath.isAbsolute() && !correctedPath.toFile().getAbsolutePath().startsWith("/Users") && !correctedPath.toFile().getAbsolutePath().startsWith("/Library"))
 				{
-					correctedPath = Paths.get("/Volumes", path);
+					correctedPath = Paths.get("/", correctedPath.subpath(1, correctedPath.getNameCount()).toString());
 				}
 			}
 		}
