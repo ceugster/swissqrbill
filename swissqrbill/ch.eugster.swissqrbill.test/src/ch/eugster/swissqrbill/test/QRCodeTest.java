@@ -86,7 +86,16 @@ public class QRCodeTest
 		Path path = null;
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			path = Paths.get("C:/Users/christian/");
+			String filepath = "/C:/Users/christian/";
+			File file = new File(filepath);
+			assertTrue(file.exists());
+			assertTrue(file.isAbsolute());
+			assertTrue(file.isDirectory());
+			if (file.getAbsolutePath().startsWith("/"))
+			{
+				file = new File(file.getAbsolutePath().substring(1));
+			}
+			path = Paths.get(file.getAbsolutePath());
 			assertTrue(path.toFile().exists());
 			assertTrue(path.isAbsolute());
 			assertTrue(path.toFile().isDirectory());
