@@ -11,7 +11,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
@@ -40,12 +39,12 @@ public class QRCodeTest
 	@BeforeEach
 	public void beforeEach() throws URISyntaxException, IOException
 	{
-		String out = (System.getProperty("user.home") + File.separator + UUID.randomUUID() + ".pdf");
-		output = new File(out).toURI().toASCIIString();
+		String out = System.getProperty("user.home") + File.separator + UUID.randomUUID() + ".pdf";
+		this.output = new File(out).toURI().toASCIIString();
 		URI uri = QRCodeTest.class.getResource("/invoice.pdf").toURI();
 		File source = Paths.get(uri).toFile();
-		invoice = System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
-		FileUtils.copyFile(source, new File(invoice));
+		this.invoice = System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
+		FileUtils.copyFile(source, new File(this.invoice));
 	}
 
 	@AfterEach
@@ -163,6 +162,7 @@ public class QRCodeTest
 		form.put("language", Language.DE.name());
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
+		node.put("invoice", 12345);
 		node.put("currency", "CHF");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
@@ -194,6 +194,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
+		node.put("invoice", "12345");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -236,25 +237,37 @@ public class QRCodeTest
 		Object result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode resultNode = mapper.readTree(result.toString());
 		assertEquals(ArrayNode.class, resultNode.getClass());
-		Iterator<Entry<String, JsonNode>> entries = resultNode.fields();
+		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
+		assertEquals(4, arrayNode.size());
+		Iterator<JsonNode> entries = arrayNode.elements();
 		while (entries.hasNext())
 		{
-			Entry<String, JsonNode> next = entries.next();
-			if (next.getKey().equals("creditor.name"))
+			ObjectNode next = ObjectNode.class.cast(entries.next());
+			Iterator<String> fields = next.fieldNames();
+			while (fields.hasNext())
 			{
-				assertEquals("'creditor.name' muss den Namen des Rechnungstellers enthalten (maximal 70 Bustaben).", next.getValue());
-			}
-			else if (next.getKey().equals("creditor.address"))
-			{
-				assertEquals("'creditor.address' muss die Adresse des Rechnungstellers enthalten (maximal 70 Bustaben).", next.getValue());
-			}
-			else if (next.getKey().equals("creditor.city"))
-			{
-				assertEquals("'creditor.city' muss Postleitzahl und Ort des Rechnungstellers enthalten (maximal 70 Bustaben).", next.getValue());
-			}
-			else if (next.getKey().equals("creditor.country"))
-			{
-				assertEquals("'creditor.country' muss den zweistelligen Landcode gemäss ISO 3166 des Rechnungstellers enthalten.", next.getValue());
+				String fieldname = fields.next();
+				assertEquals("12345", fieldname);
+				if ("'creditor.name' muss den Namen des Rechnungstellers enthalten (maximal 70 Buchstaben).".equals(next.get(fieldname).asText()))
+				{
+					assertTrue(true);
+				}
+				else if ("'creditor.address' muss die Adresse des Rechnungstellers enthalten (maximal 70 Buchstaben).".equals(next.get(fieldname).asText()))
+				{
+					assertTrue(true);
+				}
+				else if ("'creditor.city' muss Postleitzahl und Ort des Rechnungstellers enthalten (maximal 70 Buchstaben).".equals(next.get(fieldname).asText()))
+				{
+					assertTrue(true);
+				}
+				else if ("'creditor.country' muss den zweistelligen Landcode gemäss ISO 3166 des Rechnungstellers enthalten.".equals(next.get(fieldname).asText()))
+				{	
+					assertTrue(true);
+				}
+				else
+				{
+					assertTrue(false);
+				}
 			}
 		}
 	}
@@ -287,7 +300,7 @@ public class QRCodeTest
 	}
 	
 	@Test
-	public void testWithoutIban() throws JsonMappingException, JsonProcessingException
+	public void testWithoutInvoice() throws JsonMappingException, JsonProcessingException
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
@@ -300,6 +313,7 @@ public class QRCodeTest
 		form.put("language", Language.DE.name());
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
+		node.put("iban", "CH4431999123000889012");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -314,13 +328,64 @@ public class QRCodeTest
 		Object result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode resultNode = mapper.readTree(result.toString());
 		assertEquals(ArrayNode.class, resultNode.getClass());
-		assertEquals(1, resultNode.size());
-		Iterator<Entry<String, JsonNode>> entries = resultNode.fields();
+		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
+		assertEquals(1, arrayNode.size());
+		Iterator<JsonNode> entries = arrayNode.elements();
 		while (entries.hasNext())
 		{
-			Entry<String, JsonNode> next = entries.next();
-			assertEquals("iban", next.getKey());
-			assertEquals("'iban' muss die QRIban des Rechnungstellers enthalten.", next.getValue());
+			ObjectNode next = ObjectNode.class.cast(entries.next());
+			Iterator<String> fields = next.fieldNames();
+			while (fields.hasNext())
+			{
+				String fieldname = fields.next();
+				assertEquals("invoice", fieldname);
+				assertEquals("'invoice' Eine Rechnungsnummer muss zwingend vorhanden sein.", next.get(fieldname).asText());
+			}
+		}
+	}
+
+	@Test
+	public void testWithoutIban() throws JsonMappingException, JsonProcessingException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		ObjectNode path = node.putObject("path");
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
+		ObjectNode form = node.putObject("form");
+		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
+		form.put("graphics_format", GraphicsFormat.PDF.name());
+		form.put("language", Language.DE.name());
+		node.put("amount", 199.95);
+		node.put("currency", "CHF");
+		node.put("invoice", "12345");
+		ObjectNode creditor = node.putObject("creditor");
+		creditor.put("name", "Robert Schneider AG");
+		creditor.put("address", "Rue du Lac 1268/2/22");
+		creditor.put("city", "2501 Biel");
+		creditor.put("country", "CH");
+		node.put("message", "Abonnement für 2020");
+		ObjectNode debtor = node.putObject("debtor");
+		debtor.put("name", "Pia-Maria Rutschmann-Schnyder");
+		debtor.put("address", "Grosse Marktgasse 28");
+		debtor.put("city", "9400 Rorschach");
+		debtor.put("country", "CH");
+		Object result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode resultNode = mapper.readTree(result.toString());
+		assertEquals(ArrayNode.class, resultNode.getClass());
+		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
+		assertEquals(1, arrayNode.size());
+		Iterator<JsonNode> entries = arrayNode.elements();
+		while (entries.hasNext())
+		{
+			ObjectNode next = ObjectNode.class.cast(entries.next());
+			Iterator<String> fields = next.fieldNames();
+			while (fields.hasNext())
+			{
+				String fieldname = fields.next();
+				assertEquals("12345", fieldname);
+				assertEquals("'iban' muss die QRIban des Rechnungstellers enthalten.", next.get(fieldname).asText());
+			}
 		}
 	}
 
@@ -356,13 +421,19 @@ public class QRCodeTest
 		Object result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode resultNode = mapper.readTree(result.toString());
 		assertEquals(ArrayNode.class, resultNode.getClass());
-		assertEquals(1, resultNode.size());
-		Iterator<Entry<String, JsonNode>> entries = resultNode.fields();
+		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
+		assertEquals(1, arrayNode.size());
+		Iterator<JsonNode> entries = arrayNode.elements();
 		while (entries.hasNext())
 		{
-			Entry<String, JsonNode> next = entries.next();
-			assertEquals("Quelldatei", next.getKey());
-			assertEquals("Die Quelldatei '" + nonExistentPath + "' existiert nicht. Sie muss für die Verarbeitung vorhanden sein", next.getValue());
+			ObjectNode next = ObjectNode.class.cast(entries.next());
+			Iterator<String> fields = next.fieldNames();
+			while (fields.hasNext())
+			{
+				String fieldname = fields.next();
+				assertEquals("10456", fieldname);
+				assertEquals("Die Quelldatei existiert nicht. Sie muss für die Verarbeitung vorhanden sein.", next.get(fieldname).asText());
+			}
 		}
 	}
 	
@@ -495,6 +566,7 @@ public class QRCodeTest
 	@Test
 	public void testQRBillOnly() throws JsonMappingException, JsonProcessingException
 	{
+		String out = this.output;
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
@@ -508,6 +580,7 @@ public class QRCodeTest
 			this.output = "/Festplatte/Users/christian/QRBill.pdf";
 			path.put("output", this.output);
 		}
+		this.output = out;
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -529,12 +602,13 @@ public class QRCodeTest
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
 		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		assertEquals("OK", result);
 	}
 	
 	@Test
 	public void testQRBillWithFileMakerPath() throws JsonMappingException, JsonProcessingException
 	{
+		String out = this.output;
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
@@ -548,6 +622,7 @@ public class QRCodeTest
 			this.output = "/Festplatte/Users/christian/QRBill.pdf";
 			path.put("output", this.output);
 		}
+		this.output = out;
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -570,20 +645,13 @@ public class QRCodeTest
 		debtor.put("country", "CH");
 		Object result = new SwissQRBillGenerator().generate(node.toString());
 		assertEquals("OK", result);	
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
-			this.output = "C:/Users/christian/QRBill.pdf";
-		}
-		else
-		{
-			this.output = "/Volumes/Festplatte/Users/christian/QRBill.pdf";
-			path.put("output", this.output);
-		}
 	}
 	
 	@Test
 	public void testQRBillWithFileMakerPathAndInvoice() throws JsonMappingException, JsonProcessingException
 	{
+		String out = this.output;
+		String inv = this.invoice;
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
@@ -591,22 +659,18 @@ public class QRCodeTest
 		{
 			this.output = "/C:/Users/christian/Documents/QRBill.pdf";
 			path.put("output", this.output);
-		}
-		else
-		{
-			this.output = "/Festplatte/Users/christian/Documents/QRBill.pdf";
-			path.put("output", this.output);
-		}
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
 			this.invoice = "/C:/Users/christian/Documents/invoice.pdf";
 			path.put("invoice", this.invoice);
 		}
 		else
 		{
+			this.output = "/Festplatte/Users/christian/Documents/QRBill.pdf";
+			path.put("output", this.output);
 			this.invoice = "/Festplatte/Users/christian/Documents/invoice.pdf";
 			path.put("invoice", this.invoice);
 		}
+		this.output = out;
+		this.invoice = inv;
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -634,14 +698,16 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithFilePath() throws JsonMappingException, JsonProcessingException
 	{
+		String out = this.output;
 		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			this.output = "C:/Users/christian/Documents/QRBill.pdf";
+			this.output = "/C:/Users/christian/Documents/QRBill.pdf";
 		}
 		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
 		{
 			this.output = "/Festplatte/Users/christian/Documents/QRBill.pdf";
 		}
+		this.output = out;
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
@@ -673,11 +739,13 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithMissingCurrency() throws JsonMappingException, JsonProcessingException
 	{
+		String out = this.output;
 		this.output = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".png");
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
+		this.output = out;
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PNG.name());
@@ -701,13 +769,19 @@ public class QRCodeTest
 		Object result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode resultNode = mapper.readTree(result.toString());
 		assertEquals(ArrayNode.class, resultNode.getClass());
-		assertEquals(1, resultNode.size());
-		Iterator<Entry<String, JsonNode>> entries = resultNode.fields();
+		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
+		assertEquals(1, arrayNode.size());
+		Iterator<JsonNode> entries = arrayNode.elements();
 		while (entries.hasNext())
 		{
-			Entry<String, JsonNode> next = entries.next();
-			assertEquals("currency", next.getKey());
-			assertEquals("'currency' muss eine gültige Währung im ISO 4217 Format (3 Buchstaben) sein.", next.getValue());
+			ObjectNode next = ObjectNode.class.cast(entries.next());
+			Iterator<String> fields = next.fieldNames();
+			while (fields.hasNext())
+			{
+				String fieldname = fields.next();
+				assertEquals("10456", fieldname);
+				assertEquals("'currency' muss eine gültige Währung im ISO 4217 Format (3 Buchstaben) sein.", next.get(fieldname).asText());
+			}
 		}
 	}
 	
