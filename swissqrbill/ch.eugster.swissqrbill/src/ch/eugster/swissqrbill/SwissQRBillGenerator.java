@@ -72,10 +72,15 @@ public class SwissQRBillGenerator
 
 		if (node != null)
 		{
-			if (Objects.isNull(node.get("invoice")))
+			String id = "Ohne Rechnungsnummer";
+			try
+			{
+				id = node.get("invoice").asText();
+			}
+			catch (NullPointerException e)
 			{
 				ObjectNode msg = mapper.createObjectNode();
-				msg.put("invoice", "'invoice' Eine Rechnungsnummer muss zwingend vorhanden sein.");
+				msg.put("Rechnungsnummer", "'invoice' Eine Rechnungsnummer muss zwingend vorhanden sein.");
 				result.add(msg);
 			}
 
@@ -88,7 +93,7 @@ public class SwissQRBillGenerator
 			catch (Exception e)
 			{
 				ObjectNode msg = mapper.createObjectNode();
-				msg.put("path.output", "Der Pfad für die generierte Daten muss gültig sein (Systempfad oder URI).");
+				msg.put(id, "Der Pfad für die generierte Daten muss gültig sein (Systempfad oder URI).");
 				result.add(msg);
 			}
 
@@ -130,7 +135,7 @@ public class SwissQRBillGenerator
 			catch (NullPointerException e)
 			{
 				ObjectNode msg = mapper.createObjectNode();
-				msg.put(node.get("invoice").asText(), "'currency' muss eine gültige Währung im ISO 4217 Format (3 Buchstaben) sein.");
+				msg.put(id, "'currency' muss eine gültige Währung im ISO 4217 Format (3 Buchstaben) sein.");
 				result.add(msg);
 			}
 			bill.setReferenceType(Bill.REFERENCE_TYPE_NO_REF);
@@ -144,7 +149,7 @@ public class SwissQRBillGenerator
 			catch (NullPointerException e)
 			{
 				ObjectNode msg = mapper.createObjectNode();
-				msg.put(node.get("invoice").asText(), "'creditor.name' muss den Namen des Rechnungstellers enthalten (maximal 70 Buchstaben).");
+				msg.put(id, "'creditor.name' muss den Namen des Rechnungstellers enthalten (maximal 70 Buchstaben).");
 				result.add(msg);
 			}
 			try
@@ -154,7 +159,7 @@ public class SwissQRBillGenerator
 			catch (NullPointerException e)
 			{
 				ObjectNode msg = mapper.createObjectNode();
-				msg.put(node.get("invoice").asText(), "'creditor.address' muss die Adresse des Rechnungstellers enthalten (maximal 70 Buchstaben).");
+				msg.put(id, "'creditor.address' muss die Adresse des Rechnungstellers enthalten (maximal 70 Buchstaben).");
 				result.add(msg);
 			}
 			try
@@ -164,7 +169,7 @@ public class SwissQRBillGenerator
 			catch (NullPointerException e)
 			{
 				ObjectNode msg = mapper.createObjectNode();
-				msg.put(node.get("invoice").asText(), "'creditor.city' muss Postleitzahl und Ort des Rechnungstellers enthalten (maximal 70 Buchstaben).");
+				msg.put(id, "'creditor.city' muss Postleitzahl und Ort des Rechnungstellers enthalten (maximal 70 Buchstaben).");
 				result.add(msg);
 			}
 			try
@@ -174,7 +179,7 @@ public class SwissQRBillGenerator
 			catch (NullPointerException e)
 			{
 				ObjectNode msg = mapper.createObjectNode();
-				msg.put(node.get("invoice").asText(), "'creditor.country' muss den zweistelligen Landcode gemäss ISO 3166 des Rechnungstellers enthalten.");
+				msg.put(id, "'creditor.country' muss den zweistelligen Landcode gemäss ISO 3166 des Rechnungstellers enthalten.");
 				result.add(msg);
 			}
 			bill.setCreditor(creditor);
@@ -185,7 +190,7 @@ public class SwissQRBillGenerator
 			catch (NullPointerException e)
 			{
 				ObjectNode msg = mapper.createObjectNode();
-				msg.put(node.get("invoice").asText(), "'iban' muss die QRIban des Rechnungstellers enthalten.");
+				msg.put(id, "'iban' muss die QRIban des Rechnungstellers enthalten.");
 				result.add(msg);
 			}
 	
@@ -248,7 +253,7 @@ public class SwissQRBillGenerator
 				catch (NullPointerException e)
 				{
 					ObjectNode msg = mapper.createObjectNode();
-					msg.put(node.get("invoice").asText(), "'debtor.name' muss den Namen des Rechnungempfängers enthalten (maximal 70 Buchstaben).");
+					msg.put(id, "'debtor.name' muss den Namen des Rechnungempfängers enthalten (maximal 70 Buchstaben).");
 					result.add(msg);
 				}
 				try
@@ -258,7 +263,7 @@ public class SwissQRBillGenerator
 				catch (NullPointerException e)
 				{
 					ObjectNode msg = mapper.createObjectNode();
-					msg.put(node.get("invoice").asText(), "'debtor.address' muss die Adresse des Rechnungsempfängers enthalten (maximal 70 Buchstaben).");
+					msg.put(id, "'debtor.address' muss die Adresse des Rechnungsempfängers enthalten (maximal 70 Buchstaben).");
 					result.add(msg);
 				}
 				try
@@ -268,7 +273,7 @@ public class SwissQRBillGenerator
 				catch (NullPointerException e)
 				{
 					ObjectNode msg = mapper.createObjectNode();
-					msg.put(node.get("invoice").asText(), "'debtor.city' muss Postleitzahl und Ort des Rechnungsempfängers enthalten (maximal 70 Buchstaben).");
+					msg.put(id, "'debtor.city' muss Postleitzahl und Ort des Rechnungsempfängers enthalten (maximal 70 Buchstaben).");
 					result.add(msg);
 				}
 				try
@@ -278,7 +283,7 @@ public class SwissQRBillGenerator
 				catch (NullPointerException e)
 				{
 					ObjectNode msg = mapper.createObjectNode();
-					msg.put(node.get("invoice").asText(), "'debtor.country' muss den zweistelligen Landcode gemäss ISO 3166 des Rechnungsempfängers enthalten.");
+					msg.put(id, "'debtor.country' muss den zweistelligen Landcode gemäss ISO 3166 des Rechnungsempfängers enthalten.");
 					result.add(msg);
 				}
 				bill.setDebtor(debtor);
@@ -299,7 +304,7 @@ public class SwissQRBillGenerator
 					catch (Exception e)
 					{
 						ObjectNode msg = mapper.createObjectNode();
-						msg.put(node.get("invoice").asText(), "Falls die QRBill an ein bestehendes Dokument angefügt werden soll, so muss dieses Dokument bereits bestehen und einen gültigen Namen haben.");
+						msg.put(id, "Falls die QRBill an ein bestehendes Dokument angefügt werden soll, so muss dieses Dokument bereits bestehen und einen gültigen Namen haben.");
 						result.add(msg);
 					}
 				}
@@ -334,7 +339,7 @@ public class SwissQRBillGenerator
 						catch (IOException e)
 						{
 							ObjectNode msg = mapper.createObjectNode();
-							msg.put(node.get("invoice").asText(), "Das Dokument, an das die QRBill angehängt werden soll, konnte nicht geöffnet werden.");
+							msg.put(id, "Das Dokument, an das die QRBill angehängt werden soll, konnte nicht geöffnet werden.");
 							result.add(msg);
 						}
 						finally
@@ -349,7 +354,7 @@ public class SwissQRBillGenerator
 								catch (IOException e)
 								{
 									ObjectNode msg = mapper.createObjectNode();
-									msg.put(node.get("invoice").asText(), "Die Zieldatei '" + invoice.toString() + "' kann nicht gespeichert werden.");
+									msg.put(id, "Die Zieldatei '" + invoice.toString() + "' kann nicht gespeichert werden.");
 									result.add(msg);
 								}
 							}
@@ -358,7 +363,7 @@ public class SwissQRBillGenerator
 					else
 					{
 						ObjectNode msg = mapper.createObjectNode();
-						msg.put(node.get("invoice").asText(), "Die Quelldatei existiert nicht. Sie muss für die Verarbeitung vorhanden sein.");
+						msg.put(id, "Die Quelldatei existiert nicht. Sie muss für die Verarbeitung vorhanden sein.");
 						result.add(msg);
 					}
 				}
@@ -391,14 +396,14 @@ public class SwissQRBillGenerator
 					catch (FileNotFoundException e) 
 					{
 						ObjectNode msg = mapper.createObjectNode();
-						msg.put(node.get("invoice").asText(), "Die Zieldatei kann nicht gefunden werden.");
+						msg.put(id, "Die Zieldatei kann nicht gefunden werden.");
 						result.add(msg);
 					} 
 					catch (IOException e) 
 					{
 						e.printStackTrace();
 						ObjectNode msg = mapper.createObjectNode();
-						msg.put(node.get("invoice").asText(), "Beim Zugriff auf die Zieldatei '" + output.toString() + "' ist ein Fehler aufgetreten.");
+						msg.put(id, "Beim Zugriff auf die Zieldatei '" + output.toString() + "' ist ein Fehler aufgetreten.");
 						result.add(msg);
 					} 
 				}
@@ -515,38 +520,25 @@ public class SwissQRBillGenerator
 	private Path adaptFilePathname(String path, ObjectMapper mapper, ArrayNode result) throws Exception
 	{
 		Path correctedPath = null;
-		try
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			URI uri = new URI(path);
-			correctedPath = Paths.get(uri);
-		}
-		catch (URISyntaxException e)
-		{
-			correctedPath = Paths.get(path);
-		}
-		catch (FileSystemNotFoundException e)
-		{
-			correctedPath = Paths.get(path);
-		}
-		catch (IllegalArgumentException e)
-		{
-			if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+			if (new File(path).isAbsolute() && path.startsWith("/"))
 			{
-				if (new File(path).isAbsolute() && path.startsWith("/"))
-				{
-					correctedPath = Paths.get(path.substring(1));
-				}
-			}
-			else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
-			{
-				correctedPath = Paths.get(path);
-				if (correctedPath.isAbsolute() && !correctedPath.toFile().getAbsolutePath().startsWith("/Users") && !correctedPath.toFile().getAbsolutePath().startsWith("/Library"))
-				{
-					correctedPath = Paths.get("/", correctedPath.subpath(1, correctedPath.getNameCount()).toString());
-				}
+				correctedPath = Paths.get(path.substring(1));
 			}
 		}
-		correctedPath.toFile().getParentFile().mkdirs();
+		else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+		{
+			correctedPath = Paths.get(path);
+			if (correctedPath.isAbsolute() && !correctedPath.toFile().getAbsolutePath().startsWith("/Users") && !correctedPath.toFile().getAbsolutePath().startsWith("/Library"))
+			{
+				correctedPath = Paths.get("/", correctedPath.subpath(1, correctedPath.getNameCount()).toString());
+			}
+		}
+		if (!Objects.isNull(correctedPath))
+		{
+			correctedPath.toFile().getParentFile().mkdirs();
+		}
 		return correctedPath;
 	}
 	

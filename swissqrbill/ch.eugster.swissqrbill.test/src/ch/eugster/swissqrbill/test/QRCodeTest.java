@@ -35,84 +35,55 @@ public class QRCodeTest
 	private String output;
 
 	private String invoice;
-
+	
+	private String sid = "123456";
+	
+	private int iid = 123456;
+	
 	@BeforeEach
 	public void beforeEach() throws URISyntaxException, IOException
 	{
-		String out = System.getProperty("user.home") + File.separator + UUID.randomUUID() + ".pdf";
-		this.output = new File(out).toURI().toASCIIString();
 		URI uri = QRCodeTest.class.getResource("/invoice.pdf").toURI();
 		File source = Paths.get(uri).toFile();
-		this.invoice = System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
-		FileUtils.copyFile(source, new File(this.invoice));
+		FileUtils.copyFile(source, new File(System.getProperty("user.home") + File.separator + "Documents/invoice.pdf"));
+
+		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+		{
+			this.output = "/Macintosh HD" + System.getProperty("java.io.tmpdir") + File.separator + "QRBill.pdf";
+			this.invoice = "/Macintosh HD" + System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
+		}
+		else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+		{
+			this.output = "/" + System.getProperty("java.io.tmpdir") + File.separator + "QRBill.pdf";
+			this.invoice = "/" + System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
+		}
+		
 	}
 
 	@AfterEach
 	public void afterEach()
 	{
-		Path path = null;
 		try
 		{
-			URI uri = new URI(this.output);
-			path = Paths.get(uri);
+			File file = new File(System.getProperty("java.io.tmpdir") + File.separator + "QRBill.pdf");
+			if (file.exists())
+			{
+				file.delete();
+			}
 		}
 		catch (Exception e)
 		{
-			if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+		}
+		try
+		{
+			File file = new File(System.getProperty("user.home") + File.separator + "Documents/invoice.pdf");
+			if (file.exists())
 			{
-				File file = new File(this.output);
-				if (file.isAbsolute() && this.output.startsWith("/"))
-				{
-					this.output = this.output.substring(1);
-				}
+				file.delete();
 			}
-			path = Paths.get(this.output);
 		}
-		if (path != null && path.toFile().exists())
+		catch (Exception e)
 		{
-			path.toFile().delete();
-		}
-		File file = new File(this.invoice);
-		if (file.exists())
-		{
-			file.delete();
-		}
-	}
-	
-	@Test
-	public void showVolumes()
-	{
-		Path path = null;
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
-			String filepath = "/C:/Users/christian/";
-			File file = new File(filepath);
-			assertTrue(file.exists());
-			assertTrue(file.isAbsolute());
-			assertTrue(file.isDirectory());
-			if (file.getAbsolutePath().startsWith("/"))
-			{
-				file = new File(file.getAbsolutePath().substring(1));
-			}
-			path = Paths.get(file.getAbsolutePath());
-			assertTrue(path.toFile().exists());
-			assertTrue(path.isAbsolute());
-			assertTrue(path.toFile().isDirectory());
-		}
-		else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
-		{
-			path = Paths.get("/Festplatte", "Users", "christian");
-			assertFalse(path.toFile().exists());
-			assertTrue(path.isAbsolute());
-			assertFalse(path.toFile().isDirectory());
-			if (path.getName(0).equals(Paths.get("Festplatte")))
-			{
-				path = Paths.get("/", path.subpath(1, path.getNameCount()).toString());
-				System.out.println(path.toString());
-			}
-			assertTrue(path.toFile().exists());
-			assertTrue(path.isAbsolute());
-			assertTrue(path.toFile().isDirectory());
 		}
 	}
 	
@@ -131,7 +102,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -162,7 +133,7 @@ public class QRCodeTest
 		form.put("language", Language.DE.name());
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
-		node.put("invoice", 12345);
+		node.put("invoice", iid);
 		node.put("currency", "CHF");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
@@ -194,7 +165,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", "12345");
+		node.put("invoice", sid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -222,7 +193,7 @@ public class QRCodeTest
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
 		form.put("language", Language.DE.name());
-		node.put("invoice", "12345");
+		node.put("invoice", sid);
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
@@ -247,7 +218,7 @@ public class QRCodeTest
 			while (fields.hasNext())
 			{
 				String fieldname = fields.next();
-				assertEquals("12345", fieldname);
+				assertEquals(sid, fieldname);
 				if ("'creditor.name' muss den Namen des Rechnungstellers enthalten (maximal 70 Buchstaben).".equals(next.get(fieldname).asText()))
 				{
 					assertTrue(true);
@@ -289,7 +260,7 @@ public class QRCodeTest
 		creditor.put("address", "Rue du Lac 1268/2/22");
 		creditor.put("city", "2501 Biel");
 		creditor.put("country", "CH");
-		node.put("invoice", "12345");
+		node.put("invoice", sid);
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
@@ -338,7 +309,7 @@ public class QRCodeTest
 			while (fields.hasNext())
 			{
 				String fieldname = fields.next();
-				assertEquals("invoice", fieldname);
+				assertEquals("Rechnungsnummer", fieldname);
 				assertEquals("'invoice' Eine Rechnungsnummer muss zwingend vorhanden sein.", next.get(fieldname).asText());
 			}
 		}
@@ -358,7 +329,7 @@ public class QRCodeTest
 		form.put("language", Language.DE.name());
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", "12345");
+		node.put("invoice", sid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -383,7 +354,7 @@ public class QRCodeTest
 			while (fields.hasNext())
 			{
 				String fieldname = fields.next();
-				assertEquals("12345", fieldname);
+				assertEquals(sid, fieldname);
 				assertEquals("'iban' muss die QRIban des Rechnungstellers enthalten.", next.get(fieldname).asText());
 			}
 		}
@@ -405,7 +376,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -431,7 +402,7 @@ public class QRCodeTest
 			while (fields.hasNext())
 			{
 				String fieldname = fields.next();
-				assertEquals("10456", fieldname);
+				assertEquals(sid, fieldname);
 				assertEquals("Die Quelldatei existiert nicht. Sie muss für die Verarbeitung vorhanden sein.", next.get(fieldname).asText());
 			}
 		}
@@ -452,7 +423,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -483,7 +454,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -514,7 +485,7 @@ public class QRCodeTest
 		form.put("language", Language.DE.name());
 		node.put("iban", "CH4431999123000889012");
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -546,7 +517,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 0);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -566,21 +537,10 @@ public class QRCodeTest
 	@Test
 	public void testQRBillOnly() throws JsonMappingException, JsonProcessingException
 	{
-		String out = this.output;
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
-			this.output = "C:\\Users\\christian\\QRBill.pdf";
-			path.put("output", this.output);
-		}
-		else
-		{
-			this.output = "/Festplatte/Users/christian/QRBill.pdf";
-			path.put("output", this.output);
-		}
-		this.output = out;
+		path.put("output", this.output);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -588,7 +548,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -608,21 +568,10 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithFileMakerPath() throws JsonMappingException, JsonProcessingException
 	{
-		String out = this.output;
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
-			this.output = "/C:/Users/christian/QRBill.pdf";
-			path.put("output", this.output);
-		}
-		else
-		{
-			this.output = "/Festplatte/Users/christian/QRBill.pdf";
-			path.put("output", this.output);
-		}
-		this.output = out;
+		path.put("output", this.output);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -630,7 +579,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -650,27 +599,11 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithFileMakerPathAndInvoice() throws JsonMappingException, JsonProcessingException
 	{
-		String out = this.output;
-		String inv = this.invoice;
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
-			this.output = "/C:/Users/christian/Documents/QRBill.pdf";
-			path.put("output", this.output);
-			this.invoice = "/C:/Users/christian/Documents/invoice.pdf";
-			path.put("invoice", this.invoice);
-		}
-		else
-		{
-			this.output = "/Festplatte/Users/christian/Documents/QRBill.pdf";
-			path.put("output", this.output);
-			this.invoice = "/Festplatte/Users/christian/Documents/invoice.pdf";
-			path.put("invoice", this.invoice);
-		}
-		this.output = out;
-		this.invoice = inv;
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PDF.name());
@@ -678,7 +611,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -698,16 +631,6 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithFilePath() throws JsonMappingException, JsonProcessingException
 	{
-		String out = this.output;
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
-			this.output = "/C:/Users/christian/Documents/QRBill.pdf";
-		}
-		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
-		{
-			this.output = "/Festplatte/Users/christian/Documents/QRBill.pdf";
-		}
-		this.output = out;
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
@@ -719,7 +642,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -739,13 +662,11 @@ public class QRCodeTest
 	@Test
 	public void testQRBillWithMissingCurrency() throws JsonMappingException, JsonProcessingException
 	{
-		String out = this.output;
 		this.output = (System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".png");
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
 		path.put("output", this.output);
-		this.output = out;
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
 		form.put("graphics_format", GraphicsFormat.PNG.name());
@@ -753,7 +674,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("amount", 199.95);
 //		node.put("currency", "CHF");
-		node.put("invoice", 10456);
+		node.put("invoice", iid);
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -779,7 +700,7 @@ public class QRCodeTest
 			while (fields.hasNext())
 			{
 				String fieldname = fields.next();
-				assertEquals("10456", fieldname);
+				assertEquals(sid, fieldname);
 				assertEquals("'currency' muss eine gültige Währung im ISO 4217 Format (3 Buchstaben) sein.", next.get(fieldname).asText());
 			}
 		}
