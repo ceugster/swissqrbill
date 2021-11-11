@@ -185,7 +185,12 @@ public class SwissQRBillGenerator
 			bill.setCreditor(creditor);
 			try
 			{
-				bill.setAccount(node.get("iban").asText());
+				String iban = node.get("iban").asText();
+				if (iban == null || iban.trim().isEmpty())
+				{
+					throw new NullPointerException();
+				}
+				bill.setAccount(iban);
 			}
 			catch (NullPointerException e)
 			{
