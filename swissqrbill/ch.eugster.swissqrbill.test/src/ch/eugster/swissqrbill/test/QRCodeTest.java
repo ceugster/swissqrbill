@@ -173,6 +173,38 @@ public class QRCodeTest
 	}
 	
 	@Test
+	public void testWithEmptyStringInvoice() throws JsonMappingException, JsonProcessingException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		ObjectNode path = node.putObject("path");
+		path.put("output", this.output);
+		path.put("invoice", "");
+		ObjectNode form = node.putObject("form");
+		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
+		form.put("graphics_format", GraphicsFormat.PNG.name());
+		form.put("language", Language.DE.name());
+		node.put("iban", "CH4431999123000889012");
+		node.put("amount", 199.95);
+		node.put("currency", "CHF");
+		node.put("invoice", this.iid);
+		ObjectNode creditor = node.putObject("creditor");
+		creditor.put("name", "Robert Schneider AG");
+		creditor.put("address", "Rue du Lac 1268/2/22");
+		creditor.put("city", "2501 Biel");
+		creditor.put("country", "CH");
+		node.put("message", "Abonnement für 2020");
+		ObjectNode debtor = node.putObject("debtor");
+		debtor.put("number", 9048);
+		debtor.put("name", "Pia-Maria Rutschmann-Schnyder");
+		debtor.put("address", "Grosse Marktgasse 28");
+		debtor.put("city", "9400 Rorschach");
+		debtor.put("country", "CH");
+		Object result = new SwissQRBillGenerator().generate(node.toString());
+		assertEquals("OK", result);	
+	}
+	
+	@Test
 	public void testWithReference() throws JsonMappingException, JsonProcessingException
 	{
 		ObjectMapper mapper = new ObjectMapper();

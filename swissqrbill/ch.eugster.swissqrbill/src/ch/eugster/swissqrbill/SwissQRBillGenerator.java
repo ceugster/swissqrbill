@@ -524,24 +524,24 @@ public class SwissQRBillGenerator
 	
 	private Path adaptFilePathname(String path, ObjectMapper mapper, ArrayNode result) throws Exception
 	{
-		Path correctedPath = null;
-		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
-		{
-			if (new File(path).isAbsolute() && path.startsWith("/"))
-			{
-				correctedPath = Paths.get(path.substring(1));
-			}
-		}
-		else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
-		{
-			correctedPath = Paths.get(path);
-			if (correctedPath.isAbsolute() && !correctedPath.toFile().getAbsolutePath().startsWith("/Users") && !correctedPath.toFile().getAbsolutePath().startsWith("/Library"))
-			{
-				correctedPath = Paths.get("/", correctedPath.subpath(1, correctedPath.getNameCount()).toString());
-			}
-		}
+		Path correctedPath = Objects.isNull(path) ? null : (path.trim().isEmpty() ? null : Paths.get(path));
 		if (!Objects.isNull(correctedPath))
 		{
+			if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+			{
+				if (new File(path).isAbsolute() && path.startsWith("/"))
+				{
+					correctedPath = Paths.get(path.substring(1));
+				}
+			}
+			else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+			{
+				correctedPath = Paths.get(path);
+				if (correctedPath.isAbsolute() && !correctedPath.toFile().getAbsolutePath().startsWith("/Users") && !correctedPath.toFile().getAbsolutePath().startsWith("/Library"))
+				{
+					correctedPath = Paths.get("/", correctedPath.subpath(1, correctedPath.getNameCount()).toString());
+				}
+			}
 			correctedPath.toFile().getParentFile().mkdirs();
 		}
 		return correctedPath;
