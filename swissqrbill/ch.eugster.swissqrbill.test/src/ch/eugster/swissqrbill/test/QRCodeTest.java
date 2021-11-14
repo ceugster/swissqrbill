@@ -1,14 +1,13 @@
 package ch.eugster.swissqrbill.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.UUID;
@@ -22,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ch.eugster.swissqrbill.SwissQRBillGenerator;
@@ -32,6 +30,8 @@ import net.codecrete.qrbill.generator.OutputSize;
 
 public class QRCodeTest 
 {
+	private ObjectMapper mapper;
+	
 	private String output;
 
 	private String invoice;
@@ -57,7 +57,8 @@ public class QRCodeTest
 			this.output = "/" + System.getProperty("java.io.tmpdir") + File.separator + "QRBill.pdf";
 			this.invoice = "/" + System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
 		}
-		
+		this.mapper = new ObjectMapper();
+
 	}
 
 	@AfterEach
@@ -115,8 +116,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -153,12 +155,13 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		JsonNode resultNode = mapper.readTree(result.toString());
-		assertEquals(ArrayNode.class, resultNode.getClass());
-		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
-		assertEquals(1, arrayNode.size());
-		Iterator<JsonNode> entries = arrayNode.elements();
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("ERROR", targetNode.get("result").asText());
+		JsonNode errorNode = targetNode.get("errors");
+		assertNotNull(errorNode);
+		assertEquals(1, errorNode.size());
+		Iterator<JsonNode> entries = errorNode.elements();
 		while (entries.hasNext())
 		{
 			ObjectNode next = ObjectNode.class.cast(entries.next());
@@ -200,8 +203,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -232,8 +236,42 @@ public class QRCodeTest
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
 		node.put("reference", "123451234567");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
+	}
+	
+	@Test
+	public void testWithoutReference() throws JsonMappingException, JsonProcessingException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		ObjectNode path = node.putObject("path");
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
+		ObjectNode form = node.putObject("form");
+		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
+		form.put("graphics_format", GraphicsFormat.PDF.name());
+		form.put("language", Language.DE.name());
+		node.put("iban", "CH4431999123000889012");
+		node.put("amount", 199.95);
+		node.put("invoice", iid);
+		node.put("currency", "CHF");
+		ObjectNode creditor = node.putObject("creditor");
+		creditor.put("name", "Robert Schneider AG");
+		creditor.put("address", "Rue du Lac 1268/2/22");
+		creditor.put("city", "2501 Biel");
+		creditor.put("country", "CH");
+		node.put("message", "Abonnement für 2020");
+		ObjectNode debtor = node.putObject("debtor");
+		debtor.put("name", "Pia-Maria Rutschmann-Schnyder");
+		debtor.put("address", "Grosse Marktgasse 28");
+		debtor.put("city", "9400 Rorschach");
+		debtor.put("country", "CH");
+		node.put("reference", "123451234567");
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -262,8 +300,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -290,12 +329,13 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		JsonNode resultNode = mapper.readTree(result.toString());
-		assertEquals(ArrayNode.class, resultNode.getClass());
-		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
-		assertEquals(4, arrayNode.size());
-		Iterator<JsonNode> entries = arrayNode.elements();
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("ERROR", targetNode.get("result").asText());
+		JsonNode errorNode = targetNode.get("errors");
+		assertNotNull(errorNode);
+		assertEquals(4, errorNode.size());
+		Iterator<JsonNode> entries = errorNode.elements();
 		while (entries.hasNext())
 		{
 			ObjectNode next = ObjectNode.class.cast(entries.next());
@@ -351,8 +391,9 @@ public class QRCodeTest
 		node.put("currency", "CHF");
 		node.put("reference", "3139471430009017");
 		node.put("message", "Abonnement für 2020");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result.toString());
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -381,12 +422,13 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		JsonNode resultNode = mapper.readTree(result.toString());
-		assertEquals(ArrayNode.class, resultNode.getClass());
-		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
-		assertEquals(1, arrayNode.size());
-		Iterator<JsonNode> entries = arrayNode.elements();
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("ERROR", targetNode.get("result").asText());
+		JsonNode errorNode = targetNode.get("errors");
+		assertNotNull(errorNode);
+		assertEquals(1, errorNode.size());
+		Iterator<JsonNode> entries = errorNode.elements();
 		while (entries.hasNext())
 		{
 			ObjectNode next = ObjectNode.class.cast(entries.next());
@@ -426,12 +468,13 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		JsonNode resultNode = mapper.readTree(result.toString());
-		assertEquals(ArrayNode.class, resultNode.getClass());
-		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
-		assertEquals(1, arrayNode.size());
-		Iterator<JsonNode> entries = arrayNode.elements();
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("ERROR", targetNode.get("result").asText());
+		JsonNode errorNode = targetNode.get("errors");
+		assertNotNull(errorNode);
+		assertEquals(1, errorNode.size());
+		Iterator<JsonNode> entries = errorNode.elements();
 		while (entries.hasNext())
 		{
 			ObjectNode next = ObjectNode.class.cast(entries.next());
@@ -474,12 +517,13 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		JsonNode resultNode = mapper.readTree(result.toString());
-		assertEquals(ArrayNode.class, resultNode.getClass());
-		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
-		assertEquals(1, arrayNode.size());
-		Iterator<JsonNode> entries = arrayNode.elements();
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("ERROR", targetNode.get("result").asText());
+		JsonNode errorNode = targetNode.get("errors");
+		assertNotNull(errorNode);
+		assertEquals(1, errorNode.size());
+		Iterator<JsonNode> entries = errorNode.elements();
 		while (entries.hasNext())
 		{
 			ObjectNode next = ObjectNode.class.cast(entries.next());
@@ -521,8 +565,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -552,8 +597,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -583,8 +629,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -615,8 +662,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -646,8 +694,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -677,8 +726,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -709,8 +759,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result);	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -740,8 +791,9 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		assertEquals("OK", result.toString());	
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
 	}
 	
 	@Test
@@ -772,12 +824,13 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		Object result = new SwissQRBillGenerator().generate(node.toString());
-		JsonNode resultNode = mapper.readTree(result.toString());
-		assertEquals(ArrayNode.class, resultNode.getClass());
-		ArrayNode arrayNode = ArrayNode.class.cast(resultNode);
-		assertEquals(1, arrayNode.size());
-		Iterator<JsonNode> entries = arrayNode.elements();
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("ERROR", targetNode.get("result").asText());
+		JsonNode errorNode = targetNode.get("errors");
+		assertNotNull(errorNode);
+		assertEquals(1, errorNode.size());
+		Iterator<JsonNode> entries = errorNode.elements();
 		while (entries.hasNext())
 		{
 			ObjectNode next = ObjectNode.class.cast(entries.next());
