@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Swissqrbill
 Bundle-SymbolicName: ch.eugster.swissqrbill;singleton:=true
-Bundle-Version: 1.4.0.qualifier
+Bundle-Version: 1.5.0.qualifier
 Bundle-ClassPath: ch.eugster.swissqrbill,
  lib/jackson-annotations-2.12.4.jar,
  lib/jackson-core-2.12.4.jar,

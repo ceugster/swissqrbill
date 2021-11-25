@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Swiss QRBill Test
 Bundle-SymbolicName: ch.eugster.swissqrbill.test;singleton:=true
-Bundle-Version: 1.0.1.qualifier
+Bundle-Version: 1.5.0.qualifier
 Bundle-ClassPath: ch.eugster.swissqrbill.test,
  lib/commons-io-2.11.0.jar,
  .
