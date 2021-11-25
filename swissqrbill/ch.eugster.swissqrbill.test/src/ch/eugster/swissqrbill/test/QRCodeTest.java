@@ -205,7 +205,7 @@ public class QRCodeTest
 		debtor.put("country", "CH");
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
-		assertEquals("OK", targetNode.get("result").asText());	
+		assertEquals("OK", targetNode.get("result").asText());
 	}
 	
 	@Test
@@ -568,6 +568,12 @@ public class QRCodeTest
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
 		assertEquals("OK", targetNode.get("result").asText());	
+		assertTrue(ObjectNode.class.isInstance(targetNode.get("file")));
+		ObjectNode targetFileNode = ObjectNode.class.cast(targetNode.get("file"));
+		assertEquals(3, targetFileNode.size());
+		assertNotNull(targetFileNode.get("qrbill").asText());
+		assertEquals(16640, targetFileNode.get("size").asInt());
+		assertEquals("QRBill_" + String.valueOf(this.iid) + "." + GraphicsFormat.PNG.name().toLowerCase(), targetFileNode.get("name").asText());
 	}
 	
 	@Test
@@ -600,6 +606,12 @@ public class QRCodeTest
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
 		assertEquals("OK", targetNode.get("result").asText());	
+		assertTrue(ObjectNode.class.isInstance(targetNode.get("file")));
+		ObjectNode targetFileNode = ObjectNode.class.cast(targetNode.get("file"));
+		assertEquals(3, targetFileNode.size());
+		assertNotNull(targetFileNode.get("qrbill").asText());
+		assertEquals(36725, targetFileNode.get("size").asInt());
+		assertEquals("QRBill_" + String.valueOf(this.iid) + "." + GraphicsFormat.PNG.name().toLowerCase(), targetFileNode.get("name").asText());
 	}
 	
 	@Test
