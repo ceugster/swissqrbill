@@ -111,10 +111,11 @@ public class SwissQRBillGenerator
 			BillFormat format = new BillFormat();
 			ObjectNode targetFormNode = targetNode.putObject("form");
 			format.setLanguage(guessLanguage(sourceNode.get("form"), targetFormNode));
+			GraphicsFormat graphicsFormat = selectGraphicsFormat(sourceNode.get("form"), targetFormNode);
 			try
 			{
 				format.setFontFamily("Arial");
-				format.setGraphicsFormat(selectGraphicsFormat(sourceNode.get("form"), targetFormNode));
+				format.setGraphicsFormat(graphicsFormat);
 			}
 			catch (IllegalArgumentException e)
 			{
@@ -310,6 +311,10 @@ public class SwissQRBillGenerator
 							canvas = new PDFCanvas(targetArray, PDFCanvas.LAST_PAGE);
 							QRBill.draw(bill, canvas);
 							targetNode.put("result", "OK");
+							ObjectNode targetFileNode = targetNode.putObject("file");
+							targetFileNode.put("qrbill", targetArray);
+							targetFileNode.put("name", "QRBill_" + targetNode.get("invoice").asText() + "." + graphicsFormat.name().toLowerCase());
+							targetFileNode.put("size", targetArray.length);
 							return targetNode.toString();
 						}
 						catch (IOException e)
@@ -362,6 +367,10 @@ public class SwissQRBillGenerator
 							}
 						}
 						targetNode.put("result", "OK");
+						ObjectNode targetFileNode = targetNode.putObject("file");
+						targetFileNode.put("qrbill", bytes);
+						targetFileNode.put("name", "QRBill_" + targetNode.get("invoice").asText() + "." + graphicsFormat.name().toLowerCase());
+						targetFileNode.put("size", bytes.length);
 						return targetNode.toString();
 					} 
 					catch (FileNotFoundException e) 
