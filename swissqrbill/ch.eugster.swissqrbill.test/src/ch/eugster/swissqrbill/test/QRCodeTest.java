@@ -40,6 +40,10 @@ public class QRCodeTest
 	
 	private int iid = 123456;
 	
+	private int filesizeOnlyBill = 0;
+	
+	private int filesizeWithInvoice = 0;
+	
 	@BeforeEach
 	public void beforeEach() throws URISyntaxException, IOException
 	{
@@ -51,11 +55,15 @@ public class QRCodeTest
 		{
 			this.output = File.separator + "Macintosh HD" + System.getProperty("java.io.tmpdir") + File.separator + "QRBill.pdf";
 			this.invoice = File.separator + "Macintosh HD" + System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
+			this.filesizeOnlyBill = 36725;
+			this.filesizeWithInvoice = 16640;
 		}
 		else if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
 			this.output = File.separator + System.getProperty("java.io.tmpdir") + "QRBill.pdf";
 			this.invoice = File.separator + System.getProperty("user.home") + File.separator + "Documents" + File.separator + "invoice.pdf";
+			this.filesizeOnlyBill = 40776;
+			this.filesizeWithInvoice = 16640;
 		}
 		this.mapper = new ObjectMapper();
 
@@ -569,7 +577,7 @@ public class QRCodeTest
 		ObjectNode targetFileNode = ObjectNode.class.cast(targetNode.get("file"));
 		assertEquals(3, targetFileNode.size());
 		assertNotNull(targetFileNode.get("qrbill").asText());
-		assertEquals(16640, targetFileNode.get("size").asInt());
+		assertEquals(this.filesizeWithInvoice, targetFileNode.get("size").asInt());
 		assertEquals("QRBill_" + String.valueOf(this.iid) + "." + GraphicsFormat.PNG.name().toLowerCase(), targetFileNode.get("name").asText());
 	}
 	
@@ -607,7 +615,7 @@ public class QRCodeTest
 		ObjectNode targetFileNode = ObjectNode.class.cast(targetNode.get("file"));
 		assertEquals(3, targetFileNode.size());
 		assertNotNull(targetFileNode.get("qrbill").asText());
-		assertEquals(36725, targetFileNode.get("size").asInt());
+		assertEquals(this.filesizeOnlyBill, targetFileNode.get("size").asInt());
 		assertEquals("QRBill_" + String.valueOf(this.iid) + "." + GraphicsFormat.PNG.name().toLowerCase(), targetFileNode.get("name").asText());
 	}
 	
