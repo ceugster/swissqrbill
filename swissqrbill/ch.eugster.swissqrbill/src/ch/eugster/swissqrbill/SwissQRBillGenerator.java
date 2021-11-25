@@ -501,6 +501,13 @@ public class SwissQRBillGenerator
 	
 	private Path adaptFilePathname(String path, ObjectMapper mapper) throws Exception
 	{
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
+		{
+			if (path.startsWith(File.separator) || path.startsWith("/"))
+			{
+				path = path.substring(1);
+			}
+		}
 		Path correctedPath = Objects.isNull(path) ? null : (path.trim().isEmpty() ? null : Paths.get(path));
 		if (!Objects.isNull(correctedPath))
 		{

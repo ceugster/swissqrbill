@@ -49,13 +49,13 @@ public class QRCodeTest
 
 		if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
 		{
-			this.output = "/Macintosh HD" + System.getProperty("java.io.tmpdir") + File.separator + "QRBill.pdf";
-			this.invoice = "/Macintosh HD" + System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
+			this.output = File.separator + "Macintosh HD" + System.getProperty("java.io.tmpdir") + File.separator + "QRBill.pdf";
+			this.invoice = File.separator + "Macintosh HD" + System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
 		}
-		else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+		else if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
 		{
-			this.output = "/" + System.getProperty("java.io.tmpdir") + File.separator + "QRBill.pdf";
-			this.invoice = "/" + System.getProperty("user.home") + File.separator + "Documents/invoice.pdf";
+			this.output = File.separator + System.getProperty("java.io.tmpdir") + "QRBill.pdf";
+			this.invoice = File.separator + System.getProperty("user.home") + File.separator + "Documents" + File.separator + "invoice.pdf";
 		}
 		this.mapper = new ObjectMapper();
 
@@ -127,10 +127,7 @@ public class QRCodeTest
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
 		ObjectNode path = node.putObject("path");
-		String output = this.output;
-		this.output = "/Macintosh HD/var/folders/cp/1dr4x_zj1v18fhkryhyt_wyw0000gn/T/S10/QRBill_44911.png";
 		path.put("output", this.output);
-		this.output = output;
 		path.put("invoice", this.invoice);
 		ObjectNode form = node.putObject("form");
 		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
