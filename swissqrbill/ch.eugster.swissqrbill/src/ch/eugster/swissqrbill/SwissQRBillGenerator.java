@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -33,54 +32,34 @@ import net.codecrete.qrbill.generator.ValidationResult;
 public class SwissQRBillGenerator 
 {
 	private ObjectMapper mapper = new ObjectMapper();
+
+	private ObjectNode targetNode = this.mapper.createObjectNode();
 	
-	private ObjectNode targetNode = mapper.createObjectNode();
-	
-	private ArrayNode errorNode;
+	private ArrayNode errorNode = null;
 	
 	public String generate(String json) 
 	{
-		this.mapper = new ObjectMapper();
-		this.targetNode = mapper.createObjectNode();
-		
-		// convert JSON string to Map
-		JsonNode sourceNode = null;
-		try 
-		{
-			sourceNode = mapper.readTree(json);
-			if (sourceNode == null)
-			{
-				this.addErrorNode("Parameter", "Der übergebene Parameter konnte nicht gelesen werden. Handelt es sich um ein Json Objekt?");
-			}
-		} 
-		catch (IllegalArgumentException e) 
-		{
-			this.addErrorNode("Parameter", "Der übergebene Parameter enthält ein ungültiges Element (" + e.getLocalizedMessage() + ").");
-		} 
-		catch (JsonMappingException e) 
-		{
-			this.addErrorNode("Parameter", "Der übergebene Parameter konnte nicht als JSON Object aufgebaut werden (" + e.getLocalizedMessage() + "). Handelt es sich um ein gültiges Json Objekt?");
-		} 
-		catch (JsonProcessingException e) 
-		{
-			this.addErrorNode("Parameter", "Der übergebene Parameter konnte nicht verarbeitet werden (" + e.getLocalizedMessage() + "). Handelt es sich um ein Json Objekt?");
-		}
-
+		JsonNode sourceNode = this.checkParameter(json);
 		if (sourceNode != null)
 		{
-			String id = "Ohne Rechnungsnummer";
+			String id = null;
 			try
 			{
-				id = sourceNode.get("invoice").asText();
-				targetNode.put("invoice", id);
+				JsonNode invoiceNode = sourceNode.get("invoice");
+				if (Objects.isNull(invoiceNode) || invoiceNode.asText().isEmpty())
+				{
+					throw new NullPointerException("'invoice' Eine Rechnungsnummer muss zwingend vorhanden sein.");
+				}
+				id = invoiceNode.asText();
+				this.targetNode.put("invoice", id);
 			}
 			catch (NullPointerException e)
 			{
-				this.addErrorNode("Rechnungsnummer", "'invoice' Eine Rechnungsnummer muss zwingend vorhanden sein.");
+				this.addErrorNode("Rechnungsnummer", e.getLocalizedMessage());
 			}
 
 			JsonNode sourcePathNode = sourceNode.get("path");
-			ObjectNode targetPathNode = targetNode.putObject("path");
+			ObjectNode targetPathNode = this.targetNode.putObject("path");
 			String output = sourcePathNode.get("output").asText();
 			Path path = null;
 			try
@@ -99,7 +78,7 @@ public class SwissQRBillGenerator
 				String invoicePathname = sourcePathNode.get("invoice").asText();
 				try
 				{
-					invoice = adaptFilePathname(invoicePathname, mapper);
+					invoice = adaptFilePathname(invoicePathname, this.mapper);
 					targetPathNode.put("invoice", invoice.toString());
 				}
 				catch (Exception e)
@@ -108,8 +87,18 @@ public class SwissQRBillGenerator
 				}
 			}
 
+			// Setup bill
+			Bill bill = new Bill();
+			
+			/*
+			 **************************************************
+			 * 
+			 * Bill Format setzen
+			 * 
+			 **************************************************
+			 */
 			BillFormat format = new BillFormat();
-			ObjectNode targetFormNode = targetNode.putObject("form");
+			ObjectNode targetFormNode = this.targetNode.putObject("form");
 			format.setLanguage(guessLanguage(sourceNode.get("form"), targetFormNode));
 			GraphicsFormat graphicsFormat = selectGraphicsFormat(sourceNode.get("form"), targetFormNode);
 			try
@@ -129,29 +118,100 @@ public class SwissQRBillGenerator
 			{
 				this.addErrorNode("form.output_size", buildOutputSizeErrorMessage());
 			}
-
-			// Setup bill
-			Bill bill = new Bill();
 			bill.setFormat(format);
+			
+			/*
+			 **************************************************
+			 * 
+			 * Bill Betrag setzen, falls nicht 0
+			 * 
+			 **************************************************
+			 */
 			if (sourceNode.get("amount") != null && sourceNode.get("amount").asDouble() > 0D)
 			{
 				bill.setAmountFromDouble(Double.valueOf(sourceNode.get("amount").asDouble()));
-				targetNode.put("amount", bill.getAmountAsDouble());
+				this.targetNode.put("amount", bill.getAmountAsDouble());
 			}
+			
+			/*
+			 **************************************************
+			 * 
+			 * Bill Währung setzen
+			 * 
+			 **************************************************
+			 */
+			bill.setCurrency(this.checkCurrency(sourceNode.get("currency")));
+			this.targetNode.put("currency", bill.getCurrency());
+			
+			/*
+			 **************************************************
+			 * 
+			 * Bill IBAN setzen
+			 * 
+			 **************************************************
+			 */
+			String iban = null;
 			try
 			{
-				bill.setCurrency(sourceNode.get("currency").asText());
-				targetNode.put("currency", bill.getCurrency());
+				JsonNode ibanNode = sourceNode.get("iban");
+				if (Objects.isNull(ibanNode) || ibanNode.asText().trim().isEmpty())
+				{
+					throw new NullPointerException("'iban' muss die IBAN oder QR-IBAN des Rechnungstellers enthalten.");
+				}
+				iban = ibanNode.asText();
+				bill.setAccount(iban);
+				this.targetNode.put("iban", iban);
 			}
 			catch (NullPointerException e)
 			{
-				this.addErrorNode(id, "'currency' muss eine gültige Währung im ISO 4217 Format (3 Buchstaben) sein.");
+				this.addErrorNode(id, e.getLocalizedMessage());
 			}
-			bill.setReferenceType(Bill.REFERENCE_TYPE_NO_REF);
+			
+			/*
+			 **************************************************
+			 * 
+			 * Bill Referenz setzen
+			 * 
+			 **************************************************
+			 */
+			if (!Objects.isNull(iban) && iban.length() > 6)
+			{
+				String reference = null;
+				JsonNode referenceNode = sourceNode.get("reference");
+				if (iban.charAt(4) == '3' && (iban.charAt(5) == '0' || iban.charAt(5) == '1'))
+				{
+					try
+					{
+						if (Objects.isNull(referenceNode) || referenceNode.asText().trim().isEmpty())
+						{
+							throw new NullPointerException("'reference' muss eine 27-stellige Referenznummer sein, wenn QR-IBAN verwendet wird.");
+						}
+						reference = referenceNode.asText();
+						bill.createAndSetQRReference(reference);
+					}
+					catch (NullPointerException e)
+					{
+						this.addErrorNode(id, e.getLocalizedMessage());
+					}
+				}
+				else
+				{
+					if (!Objects.isNull(referenceNode) && referenceNode.asText().startsWith("RF"))
+					{
+						reference = referenceNode.asText();
+						bill.createAndSetCreditorReference(reference);
+					}
+					else
+					{
+						bill.setReferenceType(Bill.REFERENCE_TYPE_NO_REF);
+					}
+				}
+				this.targetNode.put("reference", bill.getReference());
+			}
 	
 			// Set creditor
 			JsonNode sourceCreditorNode = sourceNode.get("creditor");
-			ObjectNode targetCreditorNode = targetNode.putObject("creditor");
+			ObjectNode targetCreditorNode = this.targetNode.putObject("creditor");
 			Address creditor = new Address();
 			try
 			{
@@ -190,57 +250,14 @@ public class SwissQRBillGenerator
 				this.addErrorNode(id, "'creditor.country' muss den zweistelligen Landcode gemäss ISO 3166 des Rechnungstellers enthalten.");
 			}
 			bill.setCreditor(creditor);
-			try
-			{
-				String iban = sourceNode.get("iban").asText();
-				if (iban == null || iban.trim().isEmpty())
-				{
-					throw new NullPointerException();
-				}
-				bill.setAccount(iban);
-				targetNode.put("iban", iban);
-			}
-			catch (NullPointerException e)
-			{
-				this.addErrorNode(id, "'iban' muss die QRIban des Rechnungstellers enthalten.");
-			}
-	
-			// more bill data
-			StringBuilder reference = new StringBuilder();
-			JsonNode refNode = sourceNode.get("reference");
-			if (!Objects.isNull(refNode))
-			{
-				Iterator<JsonNode> iterator = refNode.elements();
-				while (iterator.hasNext())
-				{
-					JsonNode next = iterator.next();
-					try
-					{
-						reference = reference.append(next.asText());
-					}
-					catch (NumberFormatException e)
-					{
-						// Do nothing
-					}
-				}
-				if (reference.length() > 26)
-				{
-					bill.setReference("");
-				}
-			}
-			if (reference.length() < 27)
-			{
-				bill.createAndSetQRReference(reference.toString());
-			}
-			targetNode.put("reference", bill.getReference());
-			
+
 			bill.setUnstructuredMessage(sourceNode.get("message").asText());
 			
 			// Set debtor
 			if (sourceNode.get("debtor") != null)
 			{
 				JsonNode sourceDebtorNode = sourceNode.get("debtor");
-				ObjectNode targetDebtorNode = targetNode.putObject("debtor");
+				ObjectNode targetDebtorNode = this.targetNode.putObject("debtor");
 				Address debtor = new Address();
 				try
 				{
@@ -283,7 +300,7 @@ public class SwissQRBillGenerator
 	
 			// Validate QR bill
 			ValidationResult validation = QRBill.validate(bill);
-			if (validation.isValid() && Objects.isNull(targetNode.get("errors")))
+			if (validation.isValid() && Objects.isNull(this.targetNode.get("errors")))
 			{
 				if (!Objects.isNull(invoice))
 				{
@@ -310,12 +327,12 @@ public class SwissQRBillGenerator
 
 							canvas = new PDFCanvas(targetArray, PDFCanvas.LAST_PAGE);
 							QRBill.draw(bill, canvas);
-							targetNode.put("result", "OK");
-							ObjectNode targetFileNode = targetNode.putObject("file");
+							this.targetNode.put("result", "OK");
+							ObjectNode targetFileNode = this.targetNode.putObject("file");
 							targetFileNode.put("qrbill", targetArray);
-							targetFileNode.put("name", "QRBill_" + targetNode.get("invoice").asText() + "." + graphicsFormat.name().toLowerCase());
+							targetFileNode.put("name", "QRBill_" + this.targetNode.get("invoice").asText() + "." + graphicsFormat.name().toLowerCase());
 							targetFileNode.put("size", targetArray.length);
-							return targetNode.toString();
+							return this.targetNode.toString();
 						}
 						catch (IOException e)
 						{
@@ -358,6 +375,10 @@ public class SwissQRBillGenerator
 							os = new FileOutputStream(path.toFile());
 							os.write(bytes);
 						}
+						catch ( Exception e)
+						{
+							e.printStackTrace();
+						}
 						finally
 						{
 							if (os != null)
@@ -366,12 +387,12 @@ public class SwissQRBillGenerator
 								os.close();
 							}
 						}
-						targetNode.put("result", "OK");
-						ObjectNode targetFileNode = targetNode.putObject("file");
+						this.targetNode.put("result", "OK");
+						ObjectNode targetFileNode = this.targetNode.putObject("file");
 						targetFileNode.put("qrbill", bytes);
-						targetFileNode.put("name", "QRBill_" + targetNode.get("invoice").asText() + "." + graphicsFormat.name().toLowerCase());
+						targetFileNode.put("name", "QRBill_" + this.targetNode.get("invoice").asText() + "." + graphicsFormat.name().toLowerCase());
 						targetFileNode.put("size", bytes.length);
-						return targetNode.toString();
+						return this.targetNode.toString();
 					} 
 					catch (FileNotFoundException e) 
 					{
@@ -385,8 +406,8 @@ public class SwissQRBillGenerator
 				}
 			}
 		}
-		targetNode.put("result", "ERROR");
-		return targetNode.toString();
+		this.targetNode.put("result", "ERROR");
+		return this.targetNode.toString();
 	}
 	
 	private Language guessLanguage(JsonNode node, ObjectNode targetFormNode)
@@ -424,6 +445,17 @@ public class SwissQRBillGenerator
 		return language;
 	}
 	
+	private String checkCurrency(JsonNode currencyNode)
+	{
+		if (Objects.isNull(currencyNode) || (!currencyNode.asText().equals("CHF") && !currencyNode.asText().equals("EUR")))
+		{
+			return "CHF";
+		}
+		else
+		{
+			return currencyNode.asText();
+		}
+	}
 	private OutputSize selectOutputSize(Path invoice, JsonNode sourceFormNode, ObjectNode targetFormNode) throws IllegalArgumentException
 	{
 		OutputSize outputSize = null;
@@ -521,7 +553,7 @@ public class SwissQRBillGenerator
 			else if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
 			{
 				correctedPath = Paths.get(path);
-				if (correctedPath.isAbsolute() && !correctedPath.toFile().getAbsolutePath().startsWith("/Users") && !correctedPath.toFile().getAbsolutePath().startsWith("/Library"))
+				if (correctedPath.isAbsolute() && !correctedPath.toFile().getAbsolutePath().startsWith("/Users") && !correctedPath.toFile().getAbsolutePath().startsWith("/Library") && !correctedPath.toFile().getAbsolutePath().startsWith("/var"))
 				{
 					correctedPath = Paths.get("/", correctedPath.subpath(1, correctedPath.getNameCount()).toString());
 				}
@@ -538,6 +570,33 @@ public class SwissQRBillGenerator
 			this.errorNode = this.targetNode.putArray("errors");
 		}
 		this.errorNode.add(mapper.createObjectNode().put(key, value));
+	}
+	
+	private JsonNode checkParameter(String json)
+	{
+		// convert JSON string to Map
+		JsonNode sourceNode = null;
+		try 
+		{
+			sourceNode = mapper.readTree(json);
+			if (sourceNode == null)
+			{
+				this.addErrorNode("Parameter", "Der übergebene Parameter konnte nicht gelesen werden. Handelt es sich um ein Json Objekt?");
+			}
+		} 
+		catch (IllegalArgumentException e) 
+		{
+			this.addErrorNode("Parameter", "Der übergebene Parameter enthält ein ungültiges Element (" + e.getLocalizedMessage() + ").");
+		} 
+		catch (JsonMappingException e) 
+		{
+			this.addErrorNode("Parameter", "Der übergebene Parameter konnte nicht als JSON Object aufgebaut werden (" + e.getLocalizedMessage() + "). Handelt es sich um ein gültiges Json Objekt?");
+		} 
+		catch (JsonProcessingException e) 
+		{
+			this.addErrorNode("Parameter", "Der übergebene Parameter konnte nicht verarbeitet werden (" + e.getLocalizedMessage() + "). Handelt es sich um ein Json Objekt?");
+		}
+		return sourceNode;
 	}
 	
 //	private enum Parameter

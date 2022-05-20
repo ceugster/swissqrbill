@@ -2,6 +2,7 @@ package ch.eugster.swissqrbill.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -12,16 +13,18 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import ch.eugster.swissqrbill.SwissQRBillGenerator;
 import net.codecrete.qrbill.generator.GraphicsFormat;
@@ -112,6 +115,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "123451234567");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -175,7 +179,7 @@ public class QRCodeTest
 			{
 				String fieldname = fields.next();
 				assertEquals("123456", fieldname);
-				assertEquals("'iban' muss die QRIban des Rechnungstellers enthalten.", next.get(fieldname).asText());
+				assertEquals("'iban' muss die IBAN oder QR-IBAN des Rechnungstellers enthalten.", next.get(fieldname).asText());
 			}
 		}
 	}
@@ -196,6 +200,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", this.iid);
+		node.put("reference", "123451234567");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -211,6 +216,7 @@ public class QRCodeTest
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
 		assertEquals("OK", targetNode.get("result").asText());
+		assertNull(targetNode.get("errors"));
 	}
 	
 	@Test
@@ -247,7 +253,41 @@ public class QRCodeTest
 	}
 	
 	@Test
-	public void testWithoutReference() throws JsonMappingException, JsonProcessingException
+	public void testIbanWithReference() throws JsonMappingException, JsonProcessingException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		ObjectNode path = node.putObject("path");
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
+		ObjectNode form = node.putObject("form");
+		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
+		form.put("graphics_format", GraphicsFormat.PDF.name());
+		form.put("language", Language.DE.name());
+		node.put("iban", "CH6309000000901197203");
+		node.put("amount", 199.95);
+		node.put("invoice", iid);
+		node.put("currency", "CHF");
+		ObjectNode creditor = node.putObject("creditor");
+		creditor.put("name", "Robert Schneider AG");
+		creditor.put("address", "Rue du Lac 1268/2/22");
+		creditor.put("city", "2501 Biel");
+		creditor.put("country", "CH");
+		node.put("message", "Abonnement für 2020");
+		ObjectNode debtor = node.putObject("debtor");
+		debtor.put("name", "Pia-Maria Rutschmann-Schnyder");
+		debtor.put("address", "Grosse Marktgasse 28");
+		debtor.put("city", "9400 Rorschach");
+		debtor.put("country", "CH");
+		node.put("reference", "123451234567");
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
+		assertEquals(NullNode.class, targetNode.get("reference").getClass());
+	}
+	
+	@Test
+	public void testQRIbanWithoutReference() throws JsonMappingException, JsonProcessingException
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();
@@ -273,10 +313,49 @@ public class QRCodeTest
 		debtor.put("address", "Grosse Marktgasse 28");
 		debtor.put("city", "9400 Rorschach");
 		debtor.put("country", "CH");
-		node.put("reference", "123451234567");
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
-		assertEquals("OK", targetNode.get("result").asText());	
+		assertEquals(NullNode.class, targetNode.get("reference").getClass());
+		assertEquals("ERROR", targetNode.get("result").asText());	
+		ArrayNode errors = ArrayNode.class.cast(targetNode.get("errors"));
+		assertEquals(1, errors.size());
+		assertEquals("'reference' muss eine 27-stellige Referenznummer sein, wenn QR-IBAN verwendet wird.", errors.iterator().next().get(String.valueOf(iid)).asText());
+	}
+	
+	@Test
+	public void testWithEmptyReference() throws JsonMappingException, JsonProcessingException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		ObjectNode path = node.putObject("path");
+		path.put("output", this.output);
+		path.put("invoice", this.invoice);
+		ObjectNode form = node.putObject("form");
+		form.put("output_size", OutputSize.QR_BILL_EXTRA_SPACE.name());
+		form.put("graphics_format", GraphicsFormat.PDF.name());
+		form.put("language", Language.DE.name());
+		node.put("iban", "CH4431999123000889012");
+		node.put("amount", 199.95);
+		node.put("invoice", iid);
+		node.put("currency", "CHF");
+		ObjectNode creditor = node.putObject("creditor");
+		creditor.put("name", "Robert Schneider AG");
+		creditor.put("address", "Rue du Lac 1268/2/22");
+		creditor.put("city", "2501 Biel");
+		creditor.put("country", "CH");
+		node.put("message", "Abonnement für 2020");
+		ObjectNode debtor = node.putObject("debtor");
+		debtor.put("name", "Pia-Maria Rutschmann-Schnyder");
+		debtor.put("address", "Grosse Marktgasse 28");
+		debtor.put("city", "9400 Rorschach");
+		debtor.put("country", "CH");
+		node.put("reference", "");
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("ERROR", targetNode.get("result").asText());
+		ArrayNode errors = ArrayNode.class.cast(targetNode.get("errors"));
+		assertEquals(1, errors.size());
+		assertEquals("'reference' muss eine 27-stellige Referenznummer sein, wenn QR-IBAN verwendet wird.", errors.iterator().next().get(String.valueOf(iid)).asText());
 	}
 	
 	@Test
@@ -294,6 +373,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", sid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -398,7 +478,8 @@ public class QRCodeTest
 		node.put("message", "Abonnement für 2020");
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
-		assertEquals("OK", targetNode.get("result").asText());	
+		assertEquals("OK", targetNode.get("result").asText());
+		assertNull(targetNode.get("errors"));
 	}
 	
 	@Test
@@ -415,6 +496,7 @@ public class QRCodeTest
 		form.put("language", Language.DE.name());
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
+		node.put("reference", "123451234567");
 		node.put("iban", "CH4431999123000889012");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
@@ -488,7 +570,7 @@ public class QRCodeTest
 			{
 				String fieldname = fields.next();
 				assertEquals(sid, fieldname);
-				assertEquals("'iban' muss die QRIban des Rechnungstellers enthalten.", next.get(fieldname).asText());
+				assertEquals("'iban' muss die IBAN oder QR-IBAN des Rechnungstellers enthalten.", next.get(fieldname).asText());
 			}
 		}
 	}
@@ -510,6 +592,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -558,6 +641,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -596,6 +680,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "123451234567");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -615,7 +700,6 @@ public class QRCodeTest
 		ObjectNode targetFileNode = ObjectNode.class.cast(targetNode.get("file"));
 		assertEquals(3, targetFileNode.size());
 		assertNotNull(targetFileNode.get("qrbill").asText());
-		assertEquals(this.filesizeOnlyBill, targetFileNode.get("size").asInt());
 		assertEquals("QRBill_" + String.valueOf(this.iid) + "." + GraphicsFormat.PNG.name().toLowerCase(), targetFileNode.get("name").asText());
 	}
 	
@@ -634,6 +718,7 @@ public class QRCodeTest
 		node.put("iban", "CH4431999123000889012");
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -667,6 +752,7 @@ public class QRCodeTest
 		node.put("amount", 0);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -699,6 +785,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -731,6 +818,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -745,7 +833,8 @@ public class QRCodeTest
 		debtor.put("country", "CH");
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
-		assertEquals("OK", targetNode.get("result").asText());	
+		assertEquals("OK", targetNode.get("result").asText());
+		assertNull(targetNode.get("errors"));
 	}
 	
 	@Test
@@ -764,6 +853,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -778,7 +868,8 @@ public class QRCodeTest
 		debtor.put("country", "CH");
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
-		assertEquals("OK", targetNode.get("result").asText());	
+		assertEquals("OK", targetNode.get("result").asText());
+		assertNull(targetNode.get("errors"));
 	}
 	
 	@Test
@@ -796,6 +887,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -810,7 +902,8 @@ public class QRCodeTest
 		debtor.put("country", "CH");
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
-		assertEquals("OK", targetNode.get("result").asText());	
+		assertEquals("OK", targetNode.get("result").asText());
+		assertNull(targetNode.get("errors"));
 	}
 	
 	@Test
@@ -829,6 +922,7 @@ public class QRCodeTest
 		node.put("amount", 199.95);
 //		node.put("currency", "CHF");
 		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
 		ObjectNode creditor = node.putObject("creditor");
 		creditor.put("name", "Robert Schneider AG");
 		creditor.put("address", "Rue du Lac 1268/2/22");
@@ -843,22 +937,40 @@ public class QRCodeTest
 		debtor.put("country", "CH");
 		String result = new SwissQRBillGenerator().generate(node.toString());
 		JsonNode targetNode = this.mapper.readTree(result);
-		assertEquals("ERROR", targetNode.get("result").asText());
-		JsonNode errorNode = targetNode.get("errors");
-		assertNotNull(errorNode);
-		assertEquals(1, errorNode.size());
-		Iterator<JsonNode> entries = errorNode.elements();
-		while (entries.hasNext())
-		{
-			ObjectNode next = ObjectNode.class.cast(entries.next());
-			Iterator<String> fields = next.fieldNames();
-			while (fields.hasNext())
-			{
-				String fieldname = fields.next();
-				assertEquals(sid, fieldname);
-				assertEquals("'currency' muss eine gültige Währung im ISO 4217 Format (3 Buchstaben) sein.", next.get(fieldname).asText());
-			}
-		}
+		assertEquals("OK", targetNode.get("result").asText());
+		assertNull(targetNode.get("errors"));
 	}
 	
+	@Test
+	public void testQRBillAida() throws JsonMappingException, JsonProcessingException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		ObjectNode path = node.putObject("path");
+		path.put("output", this.output);
+		ObjectNode form = node.putObject("form");
+		form.put("output_size", OutputSize.QR_BILL_ONLY.name());
+		form.put("graphics_format", GraphicsFormat.PNG.name());
+		form.put("language", Language.DE.name());
+		node.put("iban", "CH8030000001900073628");
+		node.put("amount", 199.95);
+		node.put("currency", "CHF");
+		node.put("invoice", iid);
+		node.put("reference", "3139471430009017");
+		ObjectNode creditor = node.putObject("creditor");
+		creditor.put("name", "Aida – Die Schule für fremdsprachige Frauen");
+		creditor.put("address", "Merkurstrasse 2");
+		creditor.put("city", "9000 St. Gallen");
+		creditor.put("country", "CH");
+		node.put("message", "");
+		ObjectNode debtor = node.putObject("debtor");
+		debtor.put("number", 9048);
+		debtor.put("name", "Songül Abay");
+		debtor.put("address", "Rabenstrasse 6");
+		debtor.put("city", "9008  St. Gallen");
+		debtor.put("country", "CH");
+		String result = new SwissQRBillGenerator().generate(node.toString());
+		JsonNode targetNode = this.mapper.readTree(result);
+		assertEquals("OK", targetNode.get("result").asText());	
+	}
 }
