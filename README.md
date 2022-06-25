@@ -28,7 +28,7 @@ I built this library as a base to build a filemaker plugin, that facilitates the
 |`creditor.name`|string|mandatory|the creditor's name (must not be empty and not longer than 70 letters)|
 |`creditor.address`|string|mandatory|the creditor's address (must not be empty and not longer than 70 letters)|
 |`creditor.city`|string|mandatory|the creditor's postal code and town (must not be empty and not longer than 70 letters)|  
-|`creditor.country`|string|mandatory|the creditor's country as DIN 3166 three letter code|
+|`creditor.country`|string|mandatory|the creditor's country as DIN 3166 two letter code|
 |`reference`|string|mandatory|if iban is qriban, else optional) a 27 letter numeric string|  
 |`amount`|number|optional||  
 |`message`|string|optional||
@@ -36,7 +36,7 @@ I built this library as a base to build a filemaker plugin, that facilitates the
 |`debtor.name`|string|mandatory|if debtor is present: string) the debtor's name (must not be empty and not longer than 70 letters)|
 |`debtor.address`|string|mandatory|if debtor is present: string) the debtor's address (must not be empty and not longer than 70 letters)|
 |`debtor.city`|string|mandatory|if debtor is present: string) the debtor's postal code and town (must not be empty and not longer than 70 letters)|  
-|`debtor.country`|string|mandatory|if debtor is present: string) the debtor's country as DIN 3166 three letter code|
+|`debtor.country`|string|mandatory|if debtor is present: string) the debtor's country as DIN 3166 two letter code|
 
 ## Availability
 The filemaker plugin will be available for download, when the plugin is code signed, this may last some days to some weeks...
